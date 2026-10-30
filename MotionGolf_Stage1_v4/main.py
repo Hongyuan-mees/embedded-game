@@ -32,6 +32,9 @@ WHITE = (245, 245, 245)
 BLACK = (20, 20, 20)
 WALL = (92, 92, 92)
 WALL_EDGE = (55, 55, 55)
+LOW_WALL = (38, 48, 55)
+LOW_WALL_EDGE = (16, 21, 25)
+LOW_WALL_HIGHLIGHT = (72, 84, 92)
 SAND = (220, 195, 132)
 WATER = (65, 145, 200)
 PANEL = (32, 39, 45)
@@ -44,18 +47,82 @@ BUTTON_HOVER = (72, 86, 95)
 
 PLAY_RECT = pygame.Rect(20, 80, GAME_W - 40, 560)
 
-walls = [
-    pygame.Rect(310, 205, 36, 230),
-    pygame.Rect(500, 120, 190, 34),
+LEVELS = [
+    {
+        "name": "Fairway Start",
+        "spawn": (110, 155),
+        "hole": (715, 520),
+        "walls": [
+            pygame.Rect(310, 205, 36, 230),
+            pygame.Rect(500, 120, 190, 34),
+        ],
+        "low_walls": [],
+        "sand": [pygame.Rect(430, 420, 170, 95)],
+        "water": [pygame.Rect(590, 260, 150, 100)],
+    },
+    {
+        "name": "Twisted Path",
+        "spawn": (110, 155),
+        "hole": (745, 550),
+        "walls": [
+            pygame.Rect(235, 80, 30, 330),
+            pygame.Rect(385, 330, 30, 310),
+            pygame.Rect(530, 80, 30, 340),
+            pygame.Rect(265, 205, 120, 24),
+            pygame.Rect(415, 255, 115, 24),
+            pygame.Rect(560, 455, 155, 24),
+            pygame.Rect(75, 300, 25, 150),
+            pygame.Rect(650, 95, 26, 180),
+            pygame.Rect(165, 520, 75, 24),
+        ],
+        "low_walls": [],
+        "sand": [pygame.Rect(290, 470, 85, 65)],
+        "water": [pygame.Rect(445, 440, 60, 65)],
+    },
+    {
+        "name": "Hazard Circuit",
+        "spawn": (100, 150),
+        "hole": (735, 565),
+        "walls": [
+            pygame.Rect(190, 80, 28, 265),
+            pygame.Rect(320, 300, 28, 340),
+            pygame.Rect(450, 80, 28, 300),
+            pygame.Rect(580, 280, 28, 360),
+            pygame.Rect(220, 410, 100, 24),
+            pygame.Rect(355, 500, 80, 24),
+            pygame.Rect(478, 185, 102, 24),
+            pygame.Rect(610, 390, 120, 24),
+            pygame.Rect(45, 430, 120, 24),
+        ],
+        "low_walls": [
+            pygame.Rect(218, 300, 102, 10),
+            pygame.Rect(348, 350, 102, 10),
+            pygame.Rect(478, 250, 102, 10),
+            pygame.Rect(608, 500, 150, 10),
+        ],
+        "sand": [
+            pygame.Rect(225, 380, 85, 55),
+            pygame.Rect(365, 220, 70, 60),
+            pygame.Rect(630, 440, 80, 60),
+        ],
+        "water": [
+            pygame.Rect(55, 250, 80, 70),
+            pygame.Rect(485, 405, 80, 65),
+            pygame.Rect(665, 530, 65, 55),
+        ],
+    },
 ]
-sand_rects = [pygame.Rect(430, 420, 170, 95)]
-water_rects = [pygame.Rect(590, 260, 150, 100)]
 
-hole_pos = pygame.Vector2(715, 520)
+current_level = 0
+walls = []
+low_walls = []
+sand_rects = []
+water_rects = []
+hole_pos = pygame.Vector2()
 hole_radius = 16
 
 BALL_RADIUS = 12
-spawn_pos = pygame.Vector2(110, 155)
+spawn_pos = pygame.Vector2()
 ball_pos = spawn_pos.copy()
 ball_vel = pygame.Vector2()
 ball_height = 0.0
@@ -89,6 +156,8 @@ status_message = "Keyboard control ready"
 
 pause_btn = pygame.Rect(HUD_X + 28, 607, 105, 42)
 restart_btn = pygame.Rect(HUD_X + 145, 607, 105, 42)
+prev_level_btn = pygame.Rect(HUD_X + 28, 155, 105, 38)
+next_level_btn = pygame.Rect(HUD_X + 147, 155, 105, 38)
 
 
 def reset_ball(penalty=0.0):
@@ -98,6 +167,33 @@ def reset_ball(penalty=0.0):
     ball_height = 0.0
     jump_velocity = 0.0
     water_penalty += penalty
+
+
+def load_level(index):
+    global current_level, walls, low_walls, sand_rects, water_rects
+    global hole_pos, spawn_pos, paused, level_complete
+    global start_ticks, pause_started, paused_total_ms, water_penalty
+    global last_event, status_message
+
+    current_level = max(0, min(index, len(LEVELS) - 1))
+    level = LEVELS[current_level]
+    walls = [wall.copy() for wall in level["walls"]]
+    low_walls = [wall.copy() for wall in level["low_walls"]]
+    sand_rects = [sand.copy() for sand in level["sand"]]
+    water_rects = [water.copy() for water in level["water"]]
+    hole_pos = pygame.Vector2(level["hole"])
+    spawn_pos = pygame.Vector2(level["spawn"])
+
+    held_keys.clear()
+    paused = False
+    level_complete = False
+    water_penalty = 0.0
+    start_ticks = pygame.time.get_ticks()
+    pause_started = None
+    paused_total_ms = 0
+    reset_ball(0)
+    last_event = "Level loaded"
+    status_message = f"Level {current_level + 1}: {level['name']}"
 
 
 def restart_game():
@@ -112,7 +208,7 @@ def restart_game():
     pause_started = None
     paused_total_ms = 0
     reset_ball(0)
-    status_message = "Game restarted"
+    status_message = f"Level {current_level + 1} restarted"
 
 
 def toggle_pause():
@@ -131,6 +227,12 @@ def toggle_pause():
         status_message = "Resumed"
 
 
+def switch_level(delta):
+    target = max(0, min(current_level + delta, len(LEVELS) - 1))
+    if target != current_level:
+        load_level(target)
+
+
 def circle_rect_collision(center, radius, rect):
     nearest_x = max(rect.left, min(center.x, rect.right))
     nearest_y = max(rect.top, min(center.y, rect.bottom))
@@ -143,29 +245,35 @@ def point_in_any_rect(point, rects):
     return any(r.collidepoint(point.x, point.y) for r in rects)
 
 
-def resolve_wall_collision(old_pos):
+def resolve_rect_collision(rect, old_pos):
     global ball_pos, ball_vel
 
-    if ball_height >= low_wall_clear_height:
+    if not circle_rect_collision(ball_pos, BALL_RADIUS, rect):
         return
 
+    test_x = pygame.Vector2(ball_pos.x, old_pos.y)
+    test_y = pygame.Vector2(old_pos.x, ball_pos.y)
+    hit_x = circle_rect_collision(test_x, BALL_RADIUS, rect)
+    hit_y = circle_rect_collision(test_y, BALL_RADIUS, rect)
+
+    if hit_x and not hit_y:
+        ball_pos.x = old_pos.x
+        ball_vel.x *= -0.35
+    elif hit_y and not hit_x:
+        ball_pos.y = old_pos.y
+        ball_vel.y *= -0.35
+    else:
+        ball_pos = old_pos.copy()
+        ball_vel *= -0.25
+
+
+def resolve_wall_collision(old_pos):
     for wall in walls:
-        if circle_rect_collision(ball_pos, BALL_RADIUS, wall):
-            test_x = pygame.Vector2(ball_pos.x, old_pos.y)
-            test_y = pygame.Vector2(old_pos.x, ball_pos.y)
+        resolve_rect_collision(wall, old_pos)
 
-            hit_x = circle_rect_collision(test_x, BALL_RADIUS, wall)
-            hit_y = circle_rect_collision(test_y, BALL_RADIUS, wall)
-
-            if hit_x and not hit_y:
-                ball_pos.x = old_pos.x
-                ball_vel.x *= -0.35
-            elif hit_y and not hit_x:
-                ball_pos.y = old_pos.y
-                ball_vel.y *= -0.35
-            else:
-                ball_pos = old_pos.copy()
-                ball_vel *= -0.25
+    if ball_height < low_wall_clear_height:
+        for low_wall in low_walls:
+            resolve_rect_collision(low_wall, old_pos)
 
 
 def update_input_from_held():
@@ -245,12 +353,19 @@ def current_elapsed_seconds():
     return max(0.0, active_ms / 1000.0)
 
 
-def draw_button(rect, label):
+def draw_button(rect, label, enabled=True):
     mouse = pygame.mouse.get_pos()
-    color = BUTTON_HOVER if rect.collidepoint(mouse) else BUTTON
+    if enabled:
+        color = BUTTON_HOVER if rect.collidepoint(mouse) else BUTTON
+        text_color = TEXT
+        border_color = MUTED
+    else:
+        color = (42, 48, 53)
+        text_color = (92, 102, 109)
+        border_color = (70, 78, 84)
     pygame.draw.rect(screen, color, rect, border_radius=8)
-    pygame.draw.rect(screen, MUTED, rect, 1, border_radius=8)
-    txt = SMALL.render(label, True, TEXT)
+    pygame.draw.rect(screen, border_color, rect, 1, border_radius=8)
+    txt = SMALL.render(label, True, text_color)
     screen.blit(txt, txt.get_rect(center=rect.center))
 
 
@@ -258,8 +373,16 @@ def draw_course():
     screen.fill(BG)
 
     pygame.draw.rect(screen, PANEL, (0, 0, WIDTH, 62))
-    screen.blit(FONT.render("MOTION GOLF", True, TEXT), (24, 18))
-    screen.blit(FONT.render("LEVEL 1 - Prototype", True, ACCENT), (570, 18))
+    screen.blit(FONT.render("MOTION GOLF", True, TEXT), (24, 10))
+    screen.blit(SMALL.render("COURSE SELECT EDITION", True, MUTED), (24, 39))
+    screen.blit(
+        FONT.render(f"LEVEL {current_level + 1:02d} / {len(LEVELS):02d}", True, ACCENT),
+        (570, 10),
+    )
+    screen.blit(
+        SMALL.render(LEVELS[current_level]["name"].upper(), True, TEXT),
+        (570, 39),
+    )
 
     pygame.draw.rect(screen, GRASS, PLAY_RECT, border_radius=18)
 
@@ -280,6 +403,17 @@ def draw_course():
     for wall in walls:
         pygame.draw.rect(screen, WALL_EDGE, wall.inflate(5, 5), border_radius=5)
         pygame.draw.rect(screen, WALL, wall, border_radius=4)
+
+    for low_wall in low_walls:
+        pygame.draw.rect(screen, LOW_WALL_EDGE, low_wall.inflate(3, 3), border_radius=2)
+        pygame.draw.rect(screen, LOW_WALL, low_wall, border_radius=2)
+        pygame.draw.line(
+            screen,
+            LOW_WALL_HIGHLIGHT,
+            (low_wall.left + 4, low_wall.top + 2),
+            (low_wall.right - 4, low_wall.top + 2),
+            1,
+        )
 
     pygame.draw.circle(screen, BLACK, hole_pos, hole_radius)
     pygame.draw.line(
@@ -314,8 +448,20 @@ def draw_course():
     pygame.draw.circle(screen, (190, 195, 200), (int(ball_pos.x - 4), draw_y - 4), 2)
 
     pygame.draw.rect(screen, PANEL, (HUD_X, 62, WIDTH - HUD_X, HEIGHT - 62))
-    screen.blit(FONT.render("CONTROLLER", True, TEXT), (HUD_X + 28, 92))
-    screen.blit(SMALL.render("Event-driven keyboard mode", True, ACCENT), (HUD_X + 28, 128))
+    screen.blit(FONT.render("LEVEL SELECT", True, TEXT), (HUD_X + 28, 92))
+    screen.blit(SMALL.render("Choose your course", True, ACCENT), (HUD_X + 28, 124))
+
+    draw_button(prev_level_btn, "< PREV", current_level > 0)
+    draw_button(next_level_btn, "NEXT >", current_level < len(LEVELS) - 1)
+
+    for index in range(len(LEVELS)):
+        dot_color = ACCENT if index == current_level else (82, 94, 102)
+        pygame.draw.circle(screen, dot_color, (HUD_X + 37 + index * 17, 209), 5)
+
+    screen.blit(
+        FONT.render(f"{current_level + 1:02d}  {LEVELS[current_level]['name']}", True, TEXT),
+        (HUD_X + 28, 222),
+    )
 
     values = [
         f"Roll:  {roll:+.0f}",
@@ -324,13 +470,13 @@ def draw_course():
         f"Jump:  {'AIR' if ball_height > 0 else 'READY'}",
     ]
     for i, line in enumerate(values):
-        screen.blit(FONT.render(line, True, TEXT), (HUD_X + 28, 175 + i * 35))
+        screen.blit(FONT.render(line, True, TEXT), (HUD_X + 28, 260 + i * 30))
 
-    screen.blit(SMALL.render("Last event:", True, MUTED), (HUD_X + 28, 325))
-    screen.blit(SMALL.render(last_event[:28], True, TEXT), (HUD_X + 28, 350))
-    screen.blit(SMALL.render(status_message[:30], True, MUTED), (HUD_X + 28, 375))
+    screen.blit(SMALL.render("Last event:", True, MUTED), (HUD_X + 28, 382))
+    screen.blit(SMALL.render(last_event[:28], True, TEXT), (HUD_X + 28, 404))
+    screen.blit(SMALL.render(status_message[:30], True, MUTED), (HUD_X + 28, 426))
 
-    indicator = pygame.Rect(HUD_X + 35, 410, 210, 80)
+    indicator = pygame.Rect(HUD_X + 35, 452, 210, 80)
     pygame.draw.rect(screen, (42, 49, 55), indicator, border_radius=12)
     center = pygame.Vector2(indicator.center)
     pygame.draw.line(screen, MUTED, (center.x - 70, center.y), (center.x + 70, center.y), 2)
@@ -339,14 +485,15 @@ def draw_course():
     pygame.draw.circle(screen, ACCENT, dot, 8)
 
     final_time = current_elapsed_seconds() + water_penalty
-    screen.blit(FONT.render(f"Time: {final_time:05.1f}s", True, TEXT), (HUD_X + 28, 515))
-    screen.blit(SMALL.render(f"Water penalty: +{water_penalty:.0f}s", True, MUTED), (HUD_X + 28, 548))
+    screen.blit(FONT.render(f"Time: {final_time:05.1f}s", True, TEXT), (HUD_X + 28, 542))
+    screen.blit(SMALL.render(f"Water penalty: +{water_penalty:.0f}s", True, MUTED), (HUD_X + 28, 574))
 
     draw_button(pause_btn, "Resume" if paused else "Pause")
     draw_button(restart_btn, "Restart")
 
-    screen.blit(SMALL.render("WASD / arrows = tilt", True, MUTED), (HUD_X + 28, 665))
-    screen.blit(SMALL.render("Space = jump | F1/F2 optional", True, MUTED), (HUD_X + 28, 688))
+    screen.blit(SMALL.render("WASD = tilt | Space = jump", True, MUTED), (HUD_X + 28, 665))
+    footer_hint = "Thin dark wall = jumpable" if low_walls else "[ / ] = level | Space = jump"
+    screen.blit(SMALL.render(footer_hint, True, MUTED), (HUD_X + 28, 688))
 
     if paused:
         overlay = pygame.Surface((GAME_W, HEIGHT), pygame.SRCALPHA)
@@ -361,10 +508,15 @@ def draw_course():
         screen.blit(overlay, (0, 0))
         txt = BIG.render("LEVEL COMPLETE!", True, WHITE)
         screen.blit(txt, txt.get_rect(center=(GAME_W // 2, 320)))
-        sub = FONT.render("Click Restart to play again", True, ACCENT)
+        if current_level < len(LEVELS) - 1:
+            message = "Click NEXT to play the next level"
+        else:
+            message = "Click PREV to revisit a level"
+        sub = FONT.render(message, True, ACCENT)
         screen.blit(sub, sub.get_rect(center=(GAME_W // 2, 380)))
 
 
+load_level(0)
 running = True
 
 while running:
@@ -387,6 +539,12 @@ while running:
 
             if event.key == pygame.K_ESCAPE:
                 running = False
+
+            elif event.key == pygame.K_LEFTBRACKET:
+                switch_level(-1)
+
+            elif event.key == pygame.K_RIGHTBRACKET:
+                switch_level(1)
 
             elif event.key == pygame.K_SPACE:
                 if not paused and not level_complete and ball_height == 0:
@@ -413,7 +571,14 @@ while running:
 
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             last_event = f"Mouse click {event.pos}"
-            if pause_btn.collidepoint(event.pos):
+            if prev_level_btn.collidepoint(event.pos) and current_level > 0:
+                switch_level(-1)
+            elif (
+                next_level_btn.collidepoint(event.pos)
+                and current_level < len(LEVELS) - 1
+            ):
+                switch_level(1)
+            elif pause_btn.collidepoint(event.pos):
                 toggle_pause()
             elif restart_btn.collidepoint(event.pos):
                 restart_game()

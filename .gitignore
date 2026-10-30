@@ -1,0 +1,17 @@
+# STM32CubeIDE build output
+Debug/
+Release/
+
+# Local IDE settings
+.vscode/
+
+# Temporary render/browser/PDF files
+tmp/
+
+# Local launch and session notes
+*.launch
+SESSION_CHECKPOINT.md
+
+# OS files
+Thumbs.db
+.DS_Store

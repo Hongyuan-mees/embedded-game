@@ -4,6 +4,9 @@
 固件以 50 Hz 读取六轴传感器，计算 Roll、Pitch，并检测跳跃动作后通过
 Windows 虚拟串口发送给游戏程序。
 
+组员首次使用、工程导入、烧录和游戏端解析方法请参阅
+[`PROJECT_GUIDE.md`](PROJECT_GUIDE.md)。
+
 ## 已验证状态
 
 - ST-LINK 下载、校验和复位正常。

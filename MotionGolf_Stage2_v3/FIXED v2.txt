@@ -1,0 +1,10 @@
+Motion Golf - Stage 2 v2
+
+已修复：
+- Level 2 小球碰墙闪退
+- 同样修复后续所有使用墙体碰撞的关卡
+- 原因：resolve_one_wall() 中 `ball_vel *= -0.25` 让 Python 将 ball_vel 视为局部变量
+- 现在显式声明 global ball_vel，并逐分量修改反弹速度
+
+原报错：
+UnboundLocalError: cannot access local variable 'ball_vel'

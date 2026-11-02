@@ -1,0 +1,46 @@
+Motion Golf - Stage 2 v3
+
+Changes requested:
+
+1. Difficulty presets
+Easy:
+- Lower tilt sensitivity
+- Lower maximum speed
+- Stronger natural grass slowdown
+- Higher jump power
+- Higher allowed hole-entry speed
+- Sand is still a trap, but slightly less severe
+
+Normal:
+- Balanced values
+
+Hard:
+- Higher tilt sensitivity
+- Higher maximum speed
+- Ball keeps momentum longer on grass
+- Lower jump power
+- Lower allowed hole-entry speed
+- Sand trap is most severe
+
+2. Precise hole entry
+The old rule allowed the ball to complete the level when its center was close to
+the hole (distance < hole radius + 4). That could count edge contact.
+
+The new rule requires the ENTIRE ball to fit inside the hole:
+distance(ball center, hole center) + ball radius <= hole radius
+
+The ball must also be slow enough. When valid, the ball is locked to the hole,
+shrinks for 0.45 seconds, and only then completes the level.
+
+3. Strong sand trap
+While the ball is grounded in sand:
+- tilt input is reduced to a tiny percentage
+- speed is heavily damped
+- the ball is effectively almost stuck
+
+When the player jumps:
+- sand resistance is removed while airborne
+- normal tilt acceleration works again
+- the player can tilt + jump to escape the sand
+
+A "SAND TRAP - JUMP TO ESCAPE" hint appears while trapped.

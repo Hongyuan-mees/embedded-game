@@ -26,7 +26,7 @@ TITLE = pygame.font.SysFont('arial', 62, bold=True)
 BG=(22,28,31); PANEL=(31,38,42); PANEL2=(40,48,53); TEXT=(240,244,246); MUTED=(169,180,186)
 ACCENT=(112,207,139); ACCENT2=(83,176,113); GRASS=(83,147,79); GRASS2=(73,134,70)
 WHITE=(248,248,248); BLACK=(18,18,18); WALL=(99,100,103); WALL_EDGE=(55,57,60)
-LOW_WALL=(132,112,84); SAND=(222,198,137); WATER=(64,148,204); WATER_LIGHT=(166,216,242)
+LOW_WALL=(91,72,52); LOW_WALL_EDGE=(40,32,24); SAND=(222,198,137); WATER=(64,148,204); WATER_LIGHT=(166,216,242)
 RED=(224,95,95); YELLOW=(235,202,90)
 
 PLAY_RECT = pygame.Rect(24, 90, GAME_W-48, HEIGHT-120)
@@ -56,9 +56,9 @@ difficulty_name = 'Normal'
 levels = [
     {'name':'Level 1 - First Roll','spawn':(120,180),'hole':(720,530),'walls':[],'low_walls':[],'sand':[],'water':[],'par':24},
     {'name':'Level 2 - Around the Wall','spawn':(110,160),'hole':(710,520),'walls':[(350,160,38,310),(515,370,190,36)],'low_walls':[],'sand':[],'water':[],'par':36},
-    {'name':'Level 3 - Sand Choice','spawn':(120,180),'hole':(720,520),'walls':[(520,145,34,175)],'low_walls':[],'sand':[(300,290,260,150)],'water':[],'par':42},
-    {'name':'Level 4 - Water Hazard','spawn':(110,165),'hole':(720,530),'walls':[(360,170,34,190)],'low_walls':[],'sand':[(540,410,150,95)],'water':[(410,325,220,120)],'par':48},
-    {'name':'Level 5 - Jump Challenge','spawn':(110,170),'hole':(730,520),'walls':[(520,120,35,175)],'low_walls':[(315,270,210,28)],'sand':[(530,430,150,95)],'water':[(600,250,140,105)],'par':58},
+    {'name':'Level 3 - Sand Choice','spawn':(120,180),'hole':(720,520),'walls':[(250,90,32,230),(450,450,30,180),(470,130,34,145),(650,90,30,260),(90,440,135,26)],'low_walls':[],'sand':[(300,290,260,150)],'water':[],'par':42},
+    {'name':'Level 4 - Water Hazard','spawn':(110,165),'hole':(720,530),'walls':[(220,90,30,250),(360,170,34,190),(500,90,30,200),(650,90,30,220),(250,430,110,26),(680,180,120,26),(90,500,120,26)],'low_walls':[],'sand':[(530,450,140,80)],'water':[(410,325,200,100)],'par':48},
+    {'name':'Level 5 - Jump Challenge','spawn':(110,170),'hole':(730,520),'walls':[(250,90,30,250),(430,360,30,370),(520,120,35,175),(620,90,30,230),(280,430,150,26),(675,180,120,26)],'low_walls':[(280,340,150,16)],'sand':[(530,430,150,95)],'water':[(60,240,80,80)],'par':58},
 ]
 
 BALL_RADIUS=12; hole_radius=17; low_wall_clear_height=28.0
@@ -159,11 +159,25 @@ def next_level():
     if current_level+1 < len(levels): begin_level(current_level+1)
     else: set_state(GAME_COMPLETE)
 
+def switch_game_level(delta):
+    begin_level((current_level+delta)%len(levels))
+
 def circle_rect_collision(center,radius,rect):
     nx=max(rect.left,min(center.x,rect.right)); ny=max(rect.top,min(center.y,rect.bottom)); dx=center.x-nx; dy=center.y-ny
     return dx*dx+dy*dy < radius*radius
 
 def point_in_any_rect(point,rects): return any(r.collidepoint(point.x,point.y) for r in rects)
+
+def point_in_ellipse(point,ellipse):
+    radius_x=ellipse.width/2.0
+    radius_y=ellipse.height/2.0
+    if radius_x<=0 or radius_y<=0:
+        return False
+    dx=(point.x-ellipse.centerx)/radius_x
+    dy=(point.y-ellipse.centery)/radius_y
+    return dx*dx+dy*dy <= 1.0
+
+def point_in_any_ellipse(point,ellipses): return any(point_in_ellipse(point,e) for e in ellipses)
 
 def resolve_one_wall(old_pos,wall):
     global ball_pos, ball_vel
@@ -214,12 +228,12 @@ def update_physics(dt):
     if accel.length_squared()>1:
         accel=accel.normalize()
 
-    sand_rects=rects_from(level()['sand'])
+    sand_ellipses=rects_from(level()['sand'])
 
     # Sand only traps the ball while it is on/near the ground.
     # When airborne, the sand no longer applies its heavy resistance,
     # so the intended escape method is to jump while tilting.
-    grounded_in_sand = ball_height < 8 and point_in_any_rect(ball_pos, sand_rects)
+    grounded_in_sand = ball_height < 8 and point_in_any_ellipse(ball_pos, sand_ellipses)
 
     if grounded_in_sand:
         ball_vel.xy = ball_vel + accel * settings['sensitivity'] * settings['sand_accel_multiplier'] * dt
@@ -328,7 +342,7 @@ def draw_game():
         for yy in range(r.top+20,r.bottom-10,28): pygame.draw.arc(screen,WATER_LIGHT,(r.left+12,yy,r.width-24,16),math.pi,math.tau,2)
     for r in rects_from(level()['walls']): pygame.draw.rect(screen,WALL_EDGE,r.inflate(5,5),border_radius=5); pygame.draw.rect(screen,WALL,r,border_radius=4)
     for r in rects_from(level()['low_walls']):
-        pygame.draw.rect(screen,WALL_EDGE,r.inflate(5,5),border_radius=5); pygame.draw.rect(screen,LOW_WALL,r,border_radius=4)
+        pygame.draw.rect(screen,LOW_WALL_EDGE,r.inflate(3,3),border_radius=4); pygame.draw.rect(screen,LOW_WALL,r,border_radius=3)
         tag=TINY.render('JUMP',True,WHITE); screen.blit(tag,tag.get_rect(center=r.center))
     hp=hole_point(); pygame.draw.circle(screen,BLACK,hp,hole_radius); pygame.draw.line(screen,WHITE,(int(hp.x),int(hp.y)),(int(hp.x),int(hp.y-58)),3); pygame.draw.polygon(screen,RED,[(hp.x,hp.y-58),(hp.x+34,hp.y-47),(hp.x,hp.y-36)])
     if ball_sinking:
@@ -342,19 +356,26 @@ def draw_game():
         pygame.draw.circle(screen,WHITE,(int(ball_pos.x),by),BALL_RADIUS)
         pygame.draw.circle(screen,(190,195,200),(int(ball_pos.x-4),by-4),2)
 
-    grounded_in_sand = ball_height < 8 and point_in_any_rect(ball_pos, rects_from(level()['sand']))
+    grounded_in_sand = ball_height < 8 and point_in_any_ellipse(ball_pos, rects_from(level()['sand']))
     if grounded_in_sand and not ball_sinking:
         hint=FONT.render('SAND TRAP - JUMP TO ESCAPE',True,BLACK)
         hint_bg=hint.get_rect(center=(GAME_W//2,105))
         hint_bg.inflate_ip(26,12)
         pygame.draw.rect(screen,SAND,hint_bg,border_radius=9)
         screen.blit(hint,hint.get_rect(center=hint_bg.center))
-    pygame.draw.rect(screen,PANEL,(HUD_X,64,WIDTH-HUD_X,HEIGHT-64)); screen.blit(FONT.render('CONTROLLER',True,TEXT),(HUD_X+28,95)); screen.blit(SMALL.render('Mode: Keyboard simulator',True,ACCENT),(HUD_X+28,130))
+    pygame.draw.rect(screen,PANEL,(HUD_X,64,WIDTH-HUD_X,HEIGHT-64))
+    screen.blit(SMALL.render('LEVEL NAVIGATION',True,MUTED),(HUD_X+28,77))
+    level_counter=FONT.render(f'{current_level+1} / {len(levels)}',True,TEXT)
+    screen.blit(level_counter,level_counter.get_rect(center=(HUD_X+160,118)))
+    bs=[Button((HUD_X+24,98,46,40),'<',lambda:switch_game_level(-1)),Button((HUD_X+250,98,46,40),'>',lambda:switch_game_level(1))]
+    for b in bs:b.draw()
+    screen.blit(FONT.render('CONTROLLER',True,TEXT),(HUD_X+28,158))
+    screen.blit(SMALL.render('Mode: Keyboard simulator',True,ACCENT),(HUD_X+28,186))
     vals=[f'Roll:  {roll:+.0f}',f'Pitch: {pitch:+.0f}',f'Speed: {ball_vel.length():.0f}',f"Jump:  {'AIR' if ball_height>0 else 'READY'}"]
-    for i,line in enumerate(vals): screen.blit(FONT.render(line,True,TEXT),(HUD_X+28,180+i*38))
-    box=pygame.Rect(HUD_X+36,355,235,105); pygame.draw.rect(screen,PANEL2,box,border_radius=12); c=pygame.Vector2(box.center); angle=roll*8; rad=math.radians(angle); dx=math.cos(rad)*72; dy=math.sin(rad)*72; pygame.draw.line(screen,ACCENT,(c.x-dx,c.y-dy),(c.x+dx,c.y+dy),4); dot=c+pygame.Vector2(roll*24,pitch*17); pygame.draw.circle(screen,WHITE,dot,8)
+    for i,line in enumerate(vals): screen.blit(FONT.render(line,True,TEXT),(HUD_X+28,222+i*34))
+    box=pygame.Rect(HUD_X+36,360,235,105); pygame.draw.rect(screen,PANEL2,box,border_radius=12); c=pygame.Vector2(box.center); angle=roll*8; rad=math.radians(angle); dx=math.cos(rad)*72; dy=math.sin(rad)*72; pygame.draw.line(screen,ACCENT,(c.x-dx,c.y-dy),(c.x+dx,c.y+dy),4); dot=c+pygame.Vector2(roll*24,pitch*17); pygame.draw.circle(screen,WHITE,dot,8)
     t=current_elapsed()+water_penalty; screen.blit(FONT.render(f'Time: {t:05.1f}s',True,TEXT),(HUD_X+28,500)); screen.blit(SMALL.render(f'Water penalty: +{water_penalty:.0f}s',True,MUTED),(HUD_X+28,536)); screen.blit(SMALL.render(f'Difficulty: {difficulty_name}',True,MUTED),(HUD_X+28,565))
-    bs=[Button((HUD_X+25,615,120,45),'Pause',toggle_pause),Button((HUD_X+160,615,120,45),'Restart',restart_level),Button((HUD_X+25,675,255,45),'Main Menu',lambda:set_state(MENU))]
+    bs.extend([Button((HUD_X+25,615,120,45),'Pause',toggle_pause),Button((HUD_X+160,615,120,45),'Restart',restart_level),Button((HUD_X+25,675,255,45),'Main Menu',lambda:set_state(MENU))])
     for b in bs:b.draw()
     screen.blit(TINY.render('WASD/Arrows: tilt   Space: jump   F1/F2: pause/restart',True,MUTED),(26,728))
     if state==PAUSED:

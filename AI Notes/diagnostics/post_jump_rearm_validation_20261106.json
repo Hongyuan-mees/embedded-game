@@ -1,0 +1,46 @@
+{
+  "input": "live_game_gesture_4cb3c41c.jsonl",
+  "default_threshold_g": 0.3,
+  "old_event_host_s": [
+    51.1933,
+    52.7483,
+    57.1367
+  ],
+  "new_event_host_s": [
+    51.1933,
+    52.7483,
+    57.1367,
+    58.2291,
+    60.931,
+    61.7628,
+    62.7443
+  ],
+  "notes": "Replay event counts are not manually annotated gesture counts. Original session remained in settings; no real game jump was recorded in this session.",
+  "labelled_trace_counts": {
+    "gesture_up_d86908da.jsonl": {
+      "0.1": 1,
+      "0.12": 1,
+      "0.18": 0,
+      "0.3": 0,
+      "0.45": 0,
+      "0.8": 0
+    },
+    "gesture_down_40afd878.jsonl": {
+      "0.1": 0,
+      "0.12": 0,
+      "0.18": 0,
+      "0.3": 0,
+      "0.45": 0,
+      "0.8": 0
+    },
+    "gesture_side_cd06e8a1.jsonl": {
+      "0.1": 0,
+      "0.12": 0,
+      "0.18": 0,
+      "0.3": 0,
+      "0.45": 0,
+      "0.8": 0
+    }
+  },
+  "unit_tests_passed": 73
+}

@@ -138,6 +138,8 @@ motion-controller/releases/motion_controller.elf
 
 ## 7. USB 串口数据协议
 
+**当前集成分支提供v2扩展固件。** 下文三字段格式是旧版协议；当前源码在同一行追加 `V:2,T,AX,AY,AZ,GX,GY,GZ`，用于PC端方向跳跃与游戏内力度设置。字段单位、构建和烧录方法见 [releases/README_v2.md](releases/README_v2.md)。旧固件的JUMP仍是任意方向加速度模长检测，不代表已识别向上动作。
+
 核心板通过 USB CDC 每 20 ms 发送一行，即约 50 Hz。数据示例：
 
 ```text

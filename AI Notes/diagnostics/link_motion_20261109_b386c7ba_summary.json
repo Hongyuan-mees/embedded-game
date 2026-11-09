@@ -1,0 +1,20 @@
+{
+  "port": "COM6",
+  "trace": "link_motion_20261109_b386c7ba.jsonl",
+  "duration_s": 33.06,
+  "counts": {
+    "baseline": {
+      "valid": 151,
+      "sensor_errors": 0,
+      "other": 0
+    },
+    "gentle_lift": {
+      "valid": 1501,
+      "sensor_errors": 0,
+      "other": 0
+    }
+  },
+  "tick_delta_min_ms": 20,
+  "tick_delta_max_ms": 20,
+  "status": []
+}

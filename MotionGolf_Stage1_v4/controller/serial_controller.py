@@ -2,7 +2,8 @@
 
 Call update() once per game frame, then read roll, pitch and jump. roll/pitch
 are normalized acceleration inputs. jump is latched for that update only.
-After a connection or timeout, a valid JUMP:0 must precede a jump event.
+Upward mode requires v2 samples and a settled pose after connection or timeout.
+Explicit legacy mode requires a valid JUMP:0 before a rising-edge jump event.
 The serial factory and monotonic clock can be injected for hardware-free tests.
 """
 
@@ -12,16 +13,21 @@ import math
 from statistics import fmean
 import time
 
+from .upward_jump import UpwardJumpDetector
+
 
 @dataclass(frozen=True)
 class MotionPacket:
     roll: float
     pitch: float
     jump: bool
+    tick_ms: int | None = None
+    accel_raw: tuple[int, int, int] | None = None
+    gyro_raw: tuple[int, int, int] | None = None
 
 
 def parse_packet(line: str) -> MotionPacket | None:
-    """Accept exactly the three control fields, in any order; reject bad values."""
+    """Accept legacy v1 or complete v2 fields; reject partial/unknown formats."""
     fields = {}
     for item in line.strip().split(","):
         name, separator, value = item.partition(":")
@@ -29,7 +35,9 @@ def parse_packet(line: str) -> MotionPacket | None:
         if not separator or name in fields:
             return None
         fields[name] = value
-    if set(fields) != {"ROLL", "PITCH", "JUMP"} or fields["JUMP"] not in {"0", "1"}:
+    base = {"ROLL", "PITCH", "JUMP"}
+    extended = {"V", "T", "AX", "AY", "AZ", "GX", "GY", "GZ"}
+    if set(fields) not in (base, base | extended) or fields["JUMP"] not in {"0", "1"}:
         return None
     try:
         roll, pitch = float(fields["ROLL"]), float(fields["PITCH"])
@@ -39,7 +47,18 @@ def parse_packet(line: str) -> MotionPacket | None:
         return None
     if not (-180 <= roll <= 180 and -90 <= pitch <= 90):
         return None
-    return MotionPacket(roll, pitch, fields["JUMP"] == "1")
+    if set(fields) == base:
+        return MotionPacket(roll, pitch, fields["JUMP"] == "1")
+    if fields["V"] != "2":
+        return None
+    try:
+        tick = int(fields["T"])
+        raw = tuple(int(fields[key]) for key in ("AX", "AY", "AZ", "GX", "GY", "GZ"))
+    except ValueError:
+        return None
+    if not 0 <= tick <= 0xFFFFFFFF or any(not -32768 <= value <= 32767 for value in raw):
+        return None
+    return MotionPacket(roll, pitch, fields["JUMP"] == "1", tick, raw[:3], raw[3:])
 
 
 @dataclass(frozen=True)
@@ -54,13 +73,21 @@ class ControllerConfig:
     calibration_spread_deg: float = 2.0
     max_read_bytes: int = 4096
     max_line_bytes: int = 256
+    jump_mode: str = "upward"
+    jump_threshold_g: float = UpwardJumpDetector.DEFAULT_THRESHOLD
+    connection_timeout: float = 3.0
 
     def __post_init__(self):
+        if self.jump_mode not in {"legacy", "upward"}:
+            raise ValueError("jump_mode must be legacy or upward")
+        UpwardJumpDetector(self.jump_threshold_g)
         if not (math.isfinite(self.dead_zone_deg) and math.isfinite(self.full_scale_deg)
                 and 0 <= self.dead_zone_deg < self.full_scale_deg <= 180):
             raise ValueError("Require 0 <= dead zone < full scale <= 180 degrees")
         if not math.isfinite(self.data_timeout) or self.data_timeout <= 0:
             raise ValueError("data_timeout must be positive and finite")
+        if not math.isfinite(self.connection_timeout) or self.connection_timeout < self.data_timeout:
+            raise ValueError("connection_timeout must be finite and at least data_timeout")
         if not math.isfinite(self.calibration_spread_deg) or self.calibration_spread_deg <= 0:
             raise ValueError("calibration_spread_deg must be positive and finite")
         for name in ("calibration_samples", "max_read_bytes", "max_line_bytes"):
@@ -79,8 +106,8 @@ class SerialController:
     """Explicit connection lifecycle; no automatic COM selection or reconnect.
 
     connected means a fresh valid control packet has arrived, whereas is_open
-    only means the OS port is open. Calibration collects a stable window of
-    JUMP:0 packets; input stays neutral while collecting. Axis inversion applies
+    only means the OS port is open. Calibration collects a stable pose window;
+    input stays neutral while collecting. Axis inversion applies
     to the output axes after any swap. Defaults await physical orientation tests.
     """
 
@@ -91,6 +118,7 @@ class SerialController:
         self._serial = None
         self.port = None
         self.last_error = None
+        self.last_sensor_error = None
         self.connected = False
         self.roll = self.pitch = 0.0
         self.jump = False
@@ -105,6 +133,8 @@ class SerialController:
         self._last_packet_at = None
         self._waiting_since = None
         self._previous_jump = None
+        self.protocol_version = None
+        self.detector = UpwardJumpDetector(self.config.jump_threshold_g)
 
     @property
     def is_open(self):
@@ -116,9 +146,29 @@ class SerialController:
         from serial.tools import list_ports
         return [(item.device, item.description) for item in list_ports.comports()]
 
+    @staticmethod
+    def detect_port():
+        """Suggest only a unique matching CDC device; multiple matches need selection."""
+        from serial.tools import list_ports
+        matches = [item.device for item in list_ports.comports()
+                   if item.vid == 0x0483 and item.pid == 0x5740]
+        return matches[0] if len(matches) == 1 else None
+
+    def reset_gesture(self, *, preserve_reference=False):
+        """Discard gestures; UI transitions may retain the measured IMU reference."""
+        self.jump = False
+        self._previous_jump = None
+        self.detector.reset(preserve_reference=preserve_reference)
+
+    def set_jump_threshold(self, value):
+        self.detector.set_threshold(value)
+        self.jump = False
+
     def connect(self, port: str) -> bool:
         """Open at 115200/8N1 with nonblocking reads; failures stay recoverable."""
+        previous_sensor_error = self.last_sensor_error if self.port == port else None
         self.close()
+        self.last_sensor_error = previous_sensor_error
         self.last_error = None
         if not isinstance(port, str) or not port.strip():
             self.last_error = "Select a serial port"
@@ -167,6 +217,8 @@ class SerialController:
         self._partial_since = None
         self.calibrating = False
         self._samples.clear()
+        self.protocol_version = None
+        self.detector.reset()
 
     def update(self):
         """Consume at most one bounded read; never wait for a line to arrive.
@@ -179,9 +231,14 @@ class SerialController:
         now = self._clock()
         freshness_since = (self._last_packet_at if self._last_packet_at is not None
                            else self._waiting_since)
-        if freshness_since is not None and now - freshness_since >= self.config.data_timeout:
+        timeout = (self.config.data_timeout if self._last_packet_at is not None
+                   else self.config.connection_timeout)
+        if freshness_since is not None and now - freshness_since >= timeout:
+            had_packet = self._last_packet_at is not None
             self._invalidate()
-            self.last_error = "Control data timed out"
+            self.last_error = (self.last_sensor_error or
+                               ("Control data timed out" if had_packet else
+                                "No control data received: check device"))
             if self.is_open:
                 try:
                     self._serial.reset_input_buffer()
@@ -219,6 +276,7 @@ class SerialController:
                         line = ""
                     if line.startswith("MPU6050_ERROR"):
                         self._invalidate()
+                        self.last_sensor_error = line
                         self.last_error = line
                     else:
                         packet = parse_packet(line)
@@ -237,20 +295,38 @@ class SerialController:
                     self._discard_until_newline = True
 
     def _accept(self, packet, now):
+        version = 2 if packet.accel_raw is not None else 1
+        if self.protocol_version != version:
+            self.reset_gesture()
+        self.protocol_version = version
         self.connected = True
         self.last_error = None
+        self.last_sensor_error = None
         self._last_packet_at = now
         self.raw_roll, self.raw_pitch = packet.roll, packet.pitch
         rising_edge = self._previous_jump is False and packet.jump
         self._previous_jump = packet.jump
+        event = rising_edge
+        if self.config.jump_mode == "upward":
+            event = False
+            if version == 2:
+                event = self.detector.update(tuple(x / 16384.0 for x in packet.accel_raw),
+                                             tuple(x / 131.0 for x in packet.gyro_raw),
+                                             packet.tick_ms)
         if self.calibrating:
-            if packet.jump:
+            moving = packet.jump if self.config.jump_mode == "legacy" else (
+                version == 2 and (abs(math.sqrt(sum((x / 16384.0) ** 2
+                                                    for x in packet.accel_raw)) - 1.0) > 0.08 or
+                                  abs(self.detector.vertical_g) > 0.08 or
+                                  self.detector.horizontal_g > 0.08 or
+                                  any(abs(x / 131.0) > 35 for x in packet.gyro_raw)))
+            if moving:
                 self._samples.clear()
             else:
                 self._samples.append((packet.roll, packet.pitch))
                 self._finish_calibration()
         else:
-            self.jump = self.jump or rising_edge
+            self.jump = self.jump or event
         if not self.calibrating:
             self._map_angles()
 
@@ -281,6 +357,7 @@ class SerialController:
         self._previous_jump = None
         self.roll = self.pitch = 0.0
         self.jump = False
+        self.detector.reset()
         return True
 
     def _finish_calibration(self):
@@ -297,3 +374,4 @@ class SerialController:
         self.calibrating = False
         self.calibrated = True
         self._samples.clear()
+        self.detector.reset(preserve_reference=True)

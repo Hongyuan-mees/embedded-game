@@ -1,5 +1,7 @@
 # STM32 Motion Controller
 
+当前集成分支已加入PC端向上手势检测和游戏内力度设置，需要 [v2六轴上报固件](motion-controller/releases/README_v2.md)。游戏启动和操作见 [PC游戏说明](MotionGolf_Stage1_v4/README.md)。以下接线与旧版协议说明保留供参考。
+
 基于 STM32F103C8T6、MPU6050 兼容模块和 USB CDC 的体感游戏控制器。
 固件以 50 Hz 读取六轴传感器，计算 Roll、Pitch，并检测跳跃动作后通过
 Windows 虚拟串口发送给游戏程序。

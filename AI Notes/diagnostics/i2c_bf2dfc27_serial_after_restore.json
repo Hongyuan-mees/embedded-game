@@ -1,0 +1,26 @@
+{
+  "port": "COM6",
+  "seconds": 8.0,
+  "valid_count": 399,
+  "status": [],
+  "first_valid": [
+    {
+      "host_s": 0.042,
+      "line": "ROLL:0.7,PITCH:0.5,JUMP:0,V:2,T:2258411,AX:-144,AY:188,AZ:15692,GX:-625,GY:-6,GZ:-2"
+    },
+    {
+      "host_s": 0.062,
+      "line": "ROLL:0.7,PITCH:0.5,JUMP:0,V:2,T:2258431,AX:-84,AY:240,AZ:15592,GX:-630,GY:9,GZ:6"
+    }
+  ],
+  "last_valid": [
+    {
+      "host_s": 7.981,
+      "line": "ROLL:0.7,PITCH:0.6,JUMP:0,V:2,T:2266351,AX:-244,AY:180,AZ:15676,GX:-600,GY:3,GZ:4"
+    },
+    {
+      "host_s": 8.001,
+      "line": "ROLL:0.7,PITCH:0.6,JUMP:0,V:2,T:2266371,AX:-104,AY:172,AZ:15556,GX:-619,GY:8,GZ:4"
+    }
+  ]
+}

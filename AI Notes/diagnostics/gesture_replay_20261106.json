@@ -1,0 +1,110 @@
+{
+  "up": {
+    "trace": "gesture_up_d86908da.jsonl",
+    "samples": 1652,
+    "action_samples": 1501,
+    "sensor_errors": [],
+    "tick_delta_min_ms": 20,
+    "tick_delta_max_ms": 20,
+    "vertical_min_g": -0.21815532559785045,
+    "vertical_max_g": 0.3447712596386977,
+    "horizontal_max_g": 0.1030286012874577,
+    "detector_replay": {
+      "0.1": [
+        15.02
+      ],
+      "0.12": [
+        15.02
+      ],
+      "0.15": [],
+      "0.18": [],
+      "0.2": [],
+      "0.25": [],
+      "0.3": []
+    },
+    "controller_replay": {
+      "0.12": {
+        "events_s": [
+          15.02
+        ],
+        "calibrated": true,
+        "errors": [],
+        "final_state": "ready"
+      },
+      "0.3": {
+        "events_s": [],
+        "calibrated": true,
+        "errors": [],
+        "final_state": "ready"
+      }
+    }
+  },
+  "down": {
+    "trace": "gesture_down_40afd878.jsonl",
+    "samples": 1652,
+    "action_samples": 1501,
+    "sensor_errors": [],
+    "tick_delta_min_ms": 20,
+    "tick_delta_max_ms": 20,
+    "vertical_min_g": -0.1731370617484449,
+    "vertical_max_g": 0.25889256895223667,
+    "horizontal_max_g": 0.2133798508671971,
+    "detector_replay": {
+      "0.1": [],
+      "0.12": [],
+      "0.15": [],
+      "0.18": [],
+      "0.2": [],
+      "0.25": [],
+      "0.3": []
+    },
+    "controller_replay": {
+      "0.12": {
+        "events_s": [],
+        "calibrated": true,
+        "errors": [],
+        "final_state": "ready"
+      },
+      "0.3": {
+        "events_s": [],
+        "calibrated": true,
+        "errors": [],
+        "final_state": "ready"
+      }
+    }
+  },
+  "side": {
+    "trace": "gesture_side_cd06e8a1.jsonl",
+    "samples": 1652,
+    "action_samples": 1501,
+    "sensor_errors": [],
+    "tick_delta_min_ms": 20,
+    "tick_delta_max_ms": 20,
+    "vertical_min_g": -0.23674754695688605,
+    "vertical_max_g": 0.37011584591420976,
+    "horizontal_max_g": 0.42363156038901445,
+    "detector_replay": {
+      "0.1": [],
+      "0.12": [],
+      "0.15": [],
+      "0.18": [],
+      "0.2": [],
+      "0.25": [],
+      "0.3": []
+    },
+    "controller_replay": {
+      "0.12": {
+        "events_s": [],
+        "calibrated": true,
+        "errors": [],
+        "final_state": "ready"
+      },
+      "0.3": {
+        "events_s": [],
+        "calibrated": true,
+        "errors": [],
+        "final_state": "ready"
+      }
+    }
+  }
+}

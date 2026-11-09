@@ -108,6 +108,7 @@ class ControllerTests(unittest.TestCase):
         self.stream = self.streams[-1]
 
     def make_controller(self, **options):
+        options.setdefault("jump_mode", "legacy")
         def factory(**serial_options):
             stream = FakeSerial(**serial_options)
             self.streams.append(stream)
@@ -135,11 +136,28 @@ class ControllerTests(unittest.TestCase):
 
     def test_no_initial_control_packet_also_times_out(self):
         self.send(b"Motion Controller Ready,MPU6050_OK\r\n")
-        self.clock.advance(0.3)
+        self.clock.advance(3.1)
         self.controller.update()
         self.assertTrue(self.controller.is_open)
         self.assertFalse(self.controller.connected)
-        self.assertIn("timed out", self.controller.last_error)
+        self.assertIn("No control data", self.controller.last_error)
+
+    def test_initial_connection_allows_sensor_startup_time(self):
+        self.clock.advance(0.6)
+        self.send(frame())
+        self.assertTrue(self.controller.connected)
+        self.assertIsNone(self.controller.last_error)
+
+    def test_retry_does_not_mask_known_sensor_fault_with_generic_timeout(self):
+        self.send(b"MPU6050_ERROR,HW_SCAN_COUNT:0,FIRST:0x00,WHO:0x00\n")
+        self.assertTrue(self.controller.connect("TEST_PORT"))
+        self.stream = self.streams[-1]
+        self.clock.advance(3.1)
+        self.controller.update()
+        self.assertIn("MPU6050_ERROR", self.controller.last_error)
+        self.send(frame())
+        self.assertTrue(self.controller.connected)
+        self.assertIsNone(self.controller.last_sensor_error)
 
     def test_split_packet_is_only_applied_after_newline(self):
         packet = frame(25, -25)
@@ -411,7 +429,7 @@ class PySerialLoopbackTests(unittest.TestCase):
             streams.append(stream)
             return stream
 
-        controller = SerialController(serial_factory=factory)
+        controller = SerialController(ControllerConfig(jump_mode="legacy"), serial_factory=factory)
         self.addCleanup(controller.close)
         self.assertTrue(controller.connect("loop://"))
         # The loopback sender simulates wire time; only this test writes data.

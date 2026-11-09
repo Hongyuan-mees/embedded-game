@@ -710,12 +710,14 @@ int main(void)
           int32_t roll_abs = (roll_x10 < 0) ? -(int32_t)roll_x10 : (int32_t)roll_x10;
           int32_t pitch_abs = (pitch_x10 < 0) ? -(int32_t)pitch_x10 : (int32_t)pitch_x10;
           message_length = snprintf((char *)usb_message, sizeof(usb_message),
-                                    "ROLL:%s%ld.%01ld,PITCH:%s%ld.%01ld,JUMP:%u\r\n",
+                                    "ROLL:%s%ld.%01ld,PITCH:%s%ld.%01ld,JUMP:%u,V:2,T:%lu,AX:%d,AY:%d,AZ:%d,GX:%d,GY:%d,GZ:%d\r\n",
                                     roll_x10 < 0 ? "-" : "",
                                     (long)(roll_abs / 10), (long)(roll_abs % 10),
                                     pitch_x10 < 0 ? "-" : "",
                                     (long)(pitch_abs / 10), (long)(pitch_abs % 10),
-                                    jump);
+                                    jump, (unsigned long)current_tick,
+                                    (int)ax, (int)ay, (int)az,
+                                    (int)gx, (int)gy, (int)gz);
         }
         else
         {

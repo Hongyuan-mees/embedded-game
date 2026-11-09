@@ -1,0 +1,16 @@
+{
+  "seconds": 25.01,
+  "port": "COM6",
+  "samples": 1250,
+  "protocol": 2,
+  "tick_delta_min_ms": 20,
+  "tick_delta_max_ms": 20,
+  "disconnect_transitions": 0,
+  "errors": [],
+  "calibration_requested": true,
+  "calibrated": true,
+  "detector_state": "ready",
+  "neutral_roll": 0.0,
+  "neutral_pitch": 0.0,
+  "jump_events": 0
+}

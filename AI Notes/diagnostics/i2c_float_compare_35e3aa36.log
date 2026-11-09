@@ -1,0 +1,265 @@
+OD_RELEASE_BOTH
+SCL_DRIVE_LOW
+SCL_OD_RELEASE
+SCL_FLOAT_AFTER_RELEASE
+SCL_INTERNAL_PULLUP
+SCL_LOW_AGAIN
+SCL_FLOAT_DIRECTLY_FROM_LOW
+SCL_PULLUP_AGAIN
+SDA_DRIVE_LOW
+SDA_OD_RELEASE
+SDA_FLOAT_AFTER_RELEASE
+BOTH_INTERNAL_PULLUP
+
+      -------------------------------------------------------------------
+                       STM32CubeProgrammer v2.19.0                  
+      -------------------------------------------------------------------
+
+ST-LINK SN  : 37FF71064E57343634031343
+ST-LINK FW  : V2J37S7
+Board       : --
+Voltage     : 3.28V
+SWD freq    : 950 KHz
+Connect mode: Hot Plug
+Reset mode  : Software reset
+Device ID   : 0x410
+Revision ID : Rev A
+Device name : STM32F101/F102/F103 Medium-density
+Flash size  : 64 KBytes
+Device type : MCU
+Device CPU  : Cortex-M3
+BL Version  : --
+
+Core halted
+Core is halted
+Write 32-bit data
+w @0x40005400:  0x00000000
+
+
+Downloading...
+�������������������������������������������������� 0%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40010c0c:  0x00000310
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40010c04:  0x44444477
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000210
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FEF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000310
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c04:  0x44444474
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c04:  0x44444478
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c04:  0x44444477
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40010c0c:  0x00000210
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FEF8
+
+
+Write 32-bit data
+w @0x40010c04:  0x44444474
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000310
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40010c04:  0x44444478
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000110
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FDF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000310
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c04:  0x44444448
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c04:  0x44444488
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c04:  0x444444ff
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40010c0c:  0x00000010
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40005400:  0x00000001
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Core run
+Core is running

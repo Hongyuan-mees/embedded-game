@@ -1,0 +1,19 @@
+{
+  "port": "COM6",
+  "seconds": 8.04,
+  "control_packets": 0,
+  "lines": [
+    {
+      "host_s": 0.065,
+      "line": "MPU6050_ERROR,HW_SCAN_COUNT:0,FIRST:0x00,WHO:0x00"
+    },
+    {
+      "host_s": 3.181,
+      "line": "MPU6050_ERROR,HW_SCAN_COUNT:0,FIRST:0x00,WHO:0x00"
+    },
+    {
+      "host_s": 6.284,
+      "line": "MPU6050_ERROR,HW_SCAN_COUNT:0,FIRST:0x00,WHO:0x00"
+    }
+  ]
+}

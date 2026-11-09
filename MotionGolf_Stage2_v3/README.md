@@ -1,4 +1,25 @@
-# Motion Golf - Stage 2
+# Motion Arcade - Stage 2
+
+The application now starts at a game-selection screen:
+
+- `Motion Golf`: the existing five-course tilt golf game.
+- `Motion Rush`: a three-lane obstacle runner inspired by endless runner games.
+
+## Motion Rush
+
+Motion Rush currently runs with keyboard simulation:
+
+- `A / D` or `Left / Right`: switch between three lanes.
+- `W`, `Up`, or `Space`: jump over low barriers.
+- `S` or `Down`: slide under overhead gates.
+- `P / F1`: pause or resume.
+- `R / F2`: restart.
+- `Esc`: leave the run or return to the game-selection screen.
+
+The runner exposes `set_motion_state()` for future STM32 input integration. Roll is
+already mapped to the three lanes, and the method accepts jump and slide events.
+The firmware still needs to distinguish upward and downward motion gestures before
+those events can be connected to the live controller.
 
 新增：
 - 正式主菜单

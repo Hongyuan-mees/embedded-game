@@ -2,6 +2,8 @@ import math
 import sys
 import pygame
 
+from runner import RunnerGame
+
 pygame.init()
 try:
     pygame.key.stop_text_input()
@@ -14,7 +16,7 @@ HUD_X = GAME_W
 FPS = 60
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Motion Golf - Stage 2 v3')
+pygame.display.set_caption('Motion Arcade - Golf and Runner')
 clock = pygame.time.Clock()
 
 FONT = pygame.font.SysFont('arial', 23)
@@ -31,10 +33,13 @@ RED=(224,95,95); YELLOW=(235,202,90)
 
 PLAY_RECT = pygame.Rect(24, 90, GAME_W-48, HEIGHT-120)
 
-MENU='menu'; LEVEL_SELECT='level_select'; SETTINGS='settings'; PLAYING='playing'; PAUSED='paused'; LEVEL_COMPLETE='level_complete'; GAME_COMPLETE='game_complete'
-state = MENU
+GAME_SELECT='game_select'; MENU='menu'; LEVEL_SELECT='level_select'; SETTINGS='settings'
+PLAYING='playing'; PAUSED='paused'; LEVEL_COMPLETE='level_complete'; GAME_COMPLETE='game_complete'
+RUNNER='runner'
+state = GAME_SELECT
 current_level = 0
 held_keys = set()
+runner = RunnerGame()
 
 settings = {
     'sensitivity':520.0,
@@ -300,12 +305,50 @@ class Button:
         if self.rect.collidepoint(pos): self.action(); return True
         return False
 
+class ModeCard(Button):
+    def __init__(self,rect,eyebrow,title,description,accent,action):
+        super().__init__(rect,title,action)
+        self.eyebrow=eyebrow
+        self.title=title
+        self.description=description
+        self.accent=accent
+
+    def draw(self):
+        hovered=self.rect.collidepoint(pygame.mouse.get_pos())
+        pygame.draw.rect(screen,PANEL2 if hovered else PANEL,self.rect,border_radius=18)
+        pygame.draw.rect(screen,self.accent if hovered else (75,88,97),self.rect,2,border_radius=18)
+        pygame.draw.rect(screen,self.accent,(self.rect.x,self.rect.y+22,7,self.rect.height-44),border_radius=3)
+        eyebrow=SMALL.render(self.eyebrow,True,self.accent)
+        title=FONT.render(self.title,True,TEXT)
+        description=FONT.render(self.description,True,MUTED)
+        screen.blit(eyebrow,(self.rect.x+32,self.rect.y+28))
+        screen.blit(title,(self.rect.x+32,self.rect.y+65))
+        screen.blit(description,(self.rect.x+32,self.rect.y+108))
+
 def centered(text,font,y,color=TEXT):
     s=font.render(text,True,color); screen.blit(s,s.get_rect(center=(WIDTH//2,y)))
 
+def open_runner():
+    runner.show_menu()
+    set_state(RUNNER)
+
+def draw_game_select():
+    screen.fill(BG)
+    centered('MOTION ARCADE',TITLE,105)
+    centered('Choose a game, then connect the controller or use keyboard mode.',FONT,162,MUTED)
+    bs=[
+        ModeCard((40,220,520,240),'GRAVITY PUZZLE','MOTION GOLF','Tilt through five courses and sink the ball.',ACCENT,lambda:set_state(MENU)),
+        ModeCard((620,220,520,240),'THREE-LANE RUNNER','MOTION RUSH','Switch lanes, jump barriers, and slide under gates.',(78,220,218),open_runner),
+    ]
+    for b in bs:b.draw()
+    centered('Both games share keyboard simulation today and motion-controller input hooks for integration.',SMALL,525,MUTED)
+    bs.append(Button((WIDTH//2-130,575,260,52),'Exit',lambda:sys.exit()))
+    for b in bs[-1:]:b.draw()
+    return bs
+
 def draw_menu():
     screen.fill(BG); centered('MOTION GOLF',TITLE,150); centered('STM32 Motion-Controlled Mini Golf',FONT,210,MUTED)
-    bs=[Button((WIDTH//2-145,300,290,58),'Start Game',lambda:begin_level(0)),Button((WIDTH//2-145,378,290,58),'Level Select',lambda:set_state(LEVEL_SELECT)),Button((WIDTH//2-145,456,290,58),'Settings',lambda:set_state(SETTINGS)),Button((WIDTH//2-145,534,290,58),'Exit',lambda:sys.exit())]
+    bs=[Button((WIDTH//2-145,300,290,58),'Start Game',lambda:begin_level(0)),Button((WIDTH//2-145,378,290,58),'Level Select',lambda:set_state(LEVEL_SELECT)),Button((WIDTH//2-145,456,290,58),'Settings',lambda:set_state(SETTINGS)),Button((WIDTH//2-145,534,290,58),'Game Select',lambda:set_state(GAME_SELECT))]
     for b in bs:b.draw()
     return bs
 
@@ -375,7 +418,7 @@ def draw_game():
     for i,line in enumerate(vals): screen.blit(FONT.render(line,True,TEXT),(HUD_X+28,222+i*34))
     box=pygame.Rect(HUD_X+36,360,235,105); pygame.draw.rect(screen,PANEL2,box,border_radius=12); c=pygame.Vector2(box.center); angle=roll*8; rad=math.radians(angle); dx=math.cos(rad)*72; dy=math.sin(rad)*72; pygame.draw.line(screen,ACCENT,(c.x-dx,c.y-dy),(c.x+dx,c.y+dy),4); dot=c+pygame.Vector2(roll*24,pitch*17); pygame.draw.circle(screen,WHITE,dot,8)
     t=current_elapsed()+water_penalty; screen.blit(FONT.render(f'Time: {t:05.1f}s',True,TEXT),(HUD_X+28,500)); screen.blit(SMALL.render(f'Water penalty: +{water_penalty:.0f}s',True,MUTED),(HUD_X+28,536)); screen.blit(SMALL.render(f'Difficulty: {difficulty_name}',True,MUTED),(HUD_X+28,565))
-    bs.extend([Button((HUD_X+25,615,120,45),'Pause',toggle_pause),Button((HUD_X+160,615,120,45),'Restart',restart_level),Button((HUD_X+25,675,255,45),'Main Menu',lambda:set_state(MENU))])
+    bs.extend([Button((HUD_X+25,615,120,45),'Pause',toggle_pause),Button((HUD_X+160,615,120,45),'Restart',restart_level),Button((HUD_X+25,675,255,45),'Game Select',lambda:set_state(GAME_SELECT))])
     for b in bs:b.draw()
     screen.blit(TINY.render('WASD/Arrows: tilt   Space: jump   F1/F2: pause/restart',True,MUTED),(26,728))
     if state==PAUSED:
@@ -384,17 +427,18 @@ def draw_game():
 
 def draw_level_complete():
     draw_game(); ov=pygame.Surface((GAME_W,HEIGHT),pygame.SRCALPHA); ov.fill((0,0,0,155)); screen.blit(ov,(0,0)); s=BIG.render('LEVEL COMPLETE!',True,WHITE); screen.blit(s,s.get_rect(center=(GAME_W//2,265))); st='★'*stars_earned+'☆'*(3-stars_earned); s=BIG.render(st,True,YELLOW); screen.blit(s,s.get_rect(center=(GAME_W//2,330))); s=FONT.render(f'Final Time: {level_finish_time:.1f}s',True,WHITE); screen.blit(s,s.get_rect(center=(GAME_W//2,395)))
-    bs=[Button((GAME_W//2-125,455,250,52),'Next Level',next_level),Button((GAME_W//2-125,523,250,52),'Retry',restart_level),Button((GAME_W//2-125,591,250,52),'Main Menu',lambda:set_state(MENU))]
+    bs=[Button((GAME_W//2-125,455,250,52),'Next Level',next_level),Button((GAME_W//2-125,523,250,52),'Retry',restart_level),Button((GAME_W//2-125,591,250,52),'Game Select',lambda:set_state(GAME_SELECT))]
     for b in bs:b.draw()
     return bs
 
 def draw_game_complete():
     screen.fill(BG); centered('GAME COMPLETE',TITLE,185); centered('You finished all five courses.',FONT,255,MUTED); centered('Final course complete!',BIG,350,ACCENT)
-    bs=[Button((WIDTH//2-145,470,290,58),'Play Again',lambda:begin_level(0)),Button((WIDTH//2-145,548,290,58),'Main Menu',lambda:set_state(MENU))]
+    bs=[Button((WIDTH//2-145,470,290,58),'Play Again',lambda:begin_level(0)),Button((WIDTH//2-145,548,290,58),'Game Select',lambda:set_state(GAME_SELECT))]
     for b in bs:b.draw()
     return bs
 
 def draw_current():
+    if state==GAME_SELECT:return draw_game_select()
     if state==MENU:return draw_menu()
     if state==LEVEL_SELECT:return draw_level_select()
     if state==SETTINGS:return draw_settings()
@@ -409,6 +453,10 @@ while running:
     for event in pygame.event.get():
         if event.type==pygame.QUIT: running=False
         elif event.type==pygame.WINDOWFOCUSLOST: held_keys.clear()
+        elif state==RUNNER:
+            if runner.handle_event(event)=='exit':
+                runner.show_menu()
+                set_state(GAME_SELECT)
         elif event.type==pygame.KEYDOWN:
             held_keys.add(event.key)
             if event.key==pygame.K_ESCAPE:
@@ -422,9 +470,15 @@ while running:
         elif event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
             for b in reversed(buttons):
                 if b.click(event.pos): break
-    if state in (PLAYING,PAUSED): update_input()
-    else: roll=pitch=0.0
-    update_physics(dt)
-    buttons=draw_current(); pygame.display.flip()
+    if state==RUNNER:
+        runner.update(dt)
+        runner.draw(screen)
+        buttons=[]
+    else:
+        if state in (PLAYING,PAUSED): update_input()
+        else: roll=pitch=0.0
+        update_physics(dt)
+        buttons=draw_current()
+    pygame.display.flip()
 
 pygame.quit()

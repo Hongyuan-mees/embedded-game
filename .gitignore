@@ -12,6 +12,11 @@ tmp/
 *.launch
 SESSION_CHECKPOINT.md
 
+# Python local environments and bytecode
+.venv/
+__pycache__/
+*.py[cod]
+
 # OS files
 Thumbs.db
 .DS_Store

@@ -1,5 +1,6 @@
 """Run the existing game with process-local gesture logging; no source edits."""
 
+import argparse
 import json
 import math
 from pathlib import Path
@@ -10,7 +11,12 @@ import uuid
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--stage2", action="store_true", help="Run the integrated Stage 2 game")
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
+    game_package = "MotionGolf_Stage2_v3" if args.stage2 else "MotionGolf_Stage1_v4"
+    game_entry = str(root / game_package / "main.py")
     sys.path.insert(0, str(root))
     import pygame
     from MotionGolf_Stage1_v4.controller.upward_jump import UpwardJumpDetector
@@ -34,9 +40,13 @@ def main():
         if game is None:
             return {}
         panel = game.get("controller_panel")
-        controller = game.get("serial_input")
+        controller = game.get("serial_input") or game.get("stm32_controller")
+        scene = game.get("state")
         return {
-            "focused": game.get("focused"), "paused": game.get("paused"),
+            "focused": game.get("focused"),
+            "paused": game.get("paused", scene == "paused"),
+            "state": scene, "current_level": game.get("current_level"),
+            "ball_sinking": game.get("ball_sinking", False),
             "settings_open": panel.open if panel else None,
             "mode": panel.mode if panel else None,
             "ready": panel.ready if panel else None,
@@ -46,7 +56,7 @@ def main():
             "threshold_g": controller.detector.threshold_g if controller else None,
             "raw_roll": controller.raw_roll if controller else None,
             "raw_pitch": controller.raw_pitch if controller else None,
-            "level_complete": game.get("level_complete"),
+            "level_complete": game.get("level_complete", scene in ("level_complete", "game_complete")),
             "ball_height": game.get("ball_height"),
             "jump_velocity": game.get("jump_velocity"),
             "status": game.get("status_message"),
@@ -84,7 +94,7 @@ def main():
     def recorded_events(*args, **kwargs):
         nonlocal game, last_view
         namespace = sys._getframe(1).f_globals
-        if game is None and namespace.get("__file__") == str(root / "MotionGolf_Stage1_v4/main.py"):
+        if game is None and namespace.get("__file__") == game_entry:
             game = namespace
             original_jump = namespace["request_jump"]
 
@@ -98,7 +108,8 @@ def main():
         current = view()
         stable = {k: current.get(k) for k in (
             "focused", "paused", "settings_open", "mode", "ready", "calibrated",
-            "calibrating", "last_error", "threshold_g", "level_complete")}
+            "calibrating", "last_error", "threshold_g", "level_complete",
+            "state", "current_level", "ball_sinking")}
         if stable != last_view:
             log("game_state", **current)
             last_view = stable
@@ -108,6 +119,7 @@ def main():
     pygame.event.get = recorded_events
     print(f"DIAGNOSTIC_TRACE={path}", flush=True)
     log("session", description="Existing game, in-memory logging wrappers only",
+        game_package=game_package,
         recognition_policy="playability_first_v1",
         default_threshold_g=UpwardJumpDetector.DEFAULT_THRESHOLD,
         cooldown_seconds=UpwardJumpDetector.COOLDOWN_SECONDS,
@@ -115,7 +127,7 @@ def main():
         downward_holdoff_seconds=UpwardJumpDetector.DOWNWARD_HOLDOFF_SECONDS,
         transition_rest_seconds=UpwardJumpDetector.TRANSITION_REST_SECONDS)
     try:
-        runpy.run_module("MotionGolf_Stage1_v4.main", run_name="__main__")
+        runpy.run_module(game_package + ".main", run_name="__main__")
     finally:
         UpwardJumpDetector.update = original_update
         pygame.event.get = original_events

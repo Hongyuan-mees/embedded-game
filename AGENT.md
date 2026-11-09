@@ -145,7 +145,18 @@ https://github.com/Hongyuan-mees/embedded-game
 
 ## 四、现有项目代码
 
-### PC 游戏
+### 当前默认 PC 游戏入口（2026-11-09 更新）
+
+用户要求已同步并适配 `game-stage2`。当前默认运行入口为
+`MotionGolf_Stage2_v3/main.py`；用户说“打开游戏”时优先启动此新版。
+支持从仓库根目录用 `.venv/Scripts/python.exe MotionGolf_Stage2_v3/main.py` 运行。
+
+Stage 2通过本目录的controller.py适配层复用Stage 1目录中的串口、校准、手势和
+ControllerPanel模块，并共用Stage 1的本机user_settings.json。Stage 1保留作共享模块
+和回退入口，不要删除。当前默认STM32主控，F3备用键盘、F4校准、F5控制器设置。
+新版五关、物理、难度、入洞和星级逻辑以game-stage2代码为准，避免无故改动。
+
+### PC 游戏（Stage 1保留入口）
 
 目录：
 
@@ -153,11 +164,11 @@ MotionGolf_Stage1_v4/
 
 主要文件：
 
-- main.py：当前 Pygame 游戏主程序
+- main.py：Stage 1游戏主程序
 - requirements.txt：PC 端 Python 依赖
 - README.md：游戏运行说明
 
-现有游戏主要使用键盘进行控制。
+该保留版本也已接入STM32，相关共享控制实现供Stage 2复用。
 
 ### STM32 固件
 

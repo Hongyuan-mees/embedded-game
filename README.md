@@ -1,13 +1,15 @@
 # STM32 Motion Controller
 
-当前集成分支已加入PC端向上手势检测和游戏内力度设置，需要 [v2六轴上报固件](motion-controller/releases/README_v2.md)。游戏启动和操作见 [PC游戏说明](MotionGolf_Stage1_v4/README.md)。以下接线与旧版协议说明保留供参考。
+当前集成分支已适配队友的 **Stage 2 v3**：五关、难度、沙坑跳出、入洞动画及星级评分，使用现有STM32串口、校准和向上动作检测。启动与操作见 [Stage 2说明](MotionGolf_Stage2_v3/README.md)，运行入口为 `MotionGolf_Stage2_v3/main.py`。
+
+硬件上提需要 [v2六轴上报固件](motion-controller/releases/README_v2.md)。[Stage 1说明](MotionGolf_Stage1_v4/README.md)及旧入口保留；以下接线与旧版协议说明供参考。I²C间歇故障仍待进一步处理，PC适配不代表固件已加入自动总线恢复。
 
 基于 STM32F103C8T6、MPU6050 兼容模块和 USB CDC 的体感游戏控制器。
 固件以 50 Hz 读取六轴传感器，计算 Roll、Pitch，并检测跳跃动作后通过
 Windows 虚拟串口发送给游戏程序。
 
 组员首次使用、工程导入、烧录和游戏端解析方法请参阅
-[`PROJECT_GUIDE.md`](PROJECT_GUIDE.md)。
+[`PROJECT_GUIDE.md`](motion-controller/PROJECT_GUIDE.md)。
 
 ## 已验证状态
 

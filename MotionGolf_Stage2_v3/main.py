@@ -2,6 +2,8 @@ import math
 import sys
 import pygame
 
+from controller import STM32SerialController
+
 pygame.init()
 try:
     pygame.key.stop_text_input()
@@ -35,6 +37,11 @@ MENU='menu'; LEVEL_SELECT='level_select'; SETTINGS='settings'; PLAYING='playing'
 state = MENU
 current_level = 0
 held_keys = set()
+
+# Input mode is kept on Keyboard by default so the game can still be
+# tested normally even when the STM32 is not connected.
+controller_mode = 'Keyboard'
+stm32_controller = STM32SerialController()
 
 settings = {
     'sensitivity':520.0,
@@ -188,10 +195,49 @@ def resolve_wall_collision(old_pos):
             if circle_rect_collision(ball_pos,BALL_RADIUS,r): resolve_one_wall(old_pos,r)
 
 def update_input():
-    global roll,pitch
-    left=pygame.K_a in held_keys or pygame.K_LEFT in held_keys; right=pygame.K_d in held_keys or pygame.K_RIGHT in held_keys
-    up=pygame.K_w in held_keys or pygame.K_UP in held_keys; down=pygame.K_s in held_keys or pygame.K_DOWN in held_keys
-    roll=float(right)-float(left); pitch=float(down)-float(up)
+    global roll, pitch, jump_velocity
+
+    if controller_mode == 'STM32':
+        stm32_controller.update()
+
+        if stm32_controller.connected:
+            roll = stm32_controller.roll
+            pitch = stm32_controller.pitch
+
+            if (
+                stm32_controller.jump
+                and state == PLAYING
+                and ball_height == 0
+                and not ball_sinking
+            ):
+                jump_velocity = settings['jump_power']
+        else:
+            roll = 0.0
+            pitch = 0.0
+
+    else:
+        left = (
+            pygame.K_a in held_keys
+            or pygame.K_LEFT in held_keys
+        )
+
+        right = (
+            pygame.K_d in held_keys
+            or pygame.K_RIGHT in held_keys
+        )
+
+        up = (
+            pygame.K_w in held_keys
+            or pygame.K_UP in held_keys
+        )
+
+        down = (
+            pygame.K_s in held_keys
+            or pygame.K_DOWN in held_keys
+        )
+
+        roll = float(right) - float(left)
+        pitch = float(down) - float(up)
 
 def update_physics(dt):
     global ball_pos, ball_height, jump_velocity
@@ -289,6 +335,35 @@ class Button:
 def centered(text,font,y,color=TEXT):
     s=font.render(text,True,color); screen.blit(s,s.get_rect(center=(WIDTH//2,y)))
 
+
+def draw_star(surface, center, outer_radius, inner_radius, color, width=0):
+    """Draw a five-point star without using font glyphs."""
+    cx, cy = center
+    points = []
+
+    for i in range(10):
+        angle = math.radians(-90 + i * 36)
+        radius = outer_radius if i % 2 == 0 else inner_radius
+        points.append((
+            cx + math.cos(angle) * radius,
+            cy + math.sin(angle) * radius
+        ))
+
+    pygame.draw.polygon(surface, color, points, width)
+
+
+def draw_star_rating(center_x, center_y, earned, total=3):
+    spacing = 64
+    start_x = center_x - spacing * (total - 1) / 2
+
+    for i in range(total):
+        x = start_x + i * spacing
+
+        if i < earned:
+            draw_star(screen, (x, center_y), 27, 12, YELLOW)
+        else:
+            draw_star(screen, (x, center_y), 27, 12, (120, 125, 128), 3)
+
 def draw_menu():
     screen.fill(BG); centered('MOTION GOLF',TITLE,150); centered('STM32 Motion-Controlled Mini Golf',FONT,210,MUTED)
     bs=[Button((WIDTH//2-145,300,290,58),'Start Game',lambda:begin_level(0)),Button((WIDTH//2-145,378,290,58),'Level Select',lambda:set_state(LEVEL_SELECT)),Button((WIDTH//2-145,456,290,58),'Settings',lambda:set_state(SETTINGS)),Button((WIDTH//2-145,534,290,58),'Exit',lambda:sys.exit())]
@@ -349,7 +424,7 @@ def draw_game():
         hint_bg.inflate_ip(26,12)
         pygame.draw.rect(screen,SAND,hint_bg,border_radius=9)
         screen.blit(hint,hint.get_rect(center=hint_bg.center))
-    pygame.draw.rect(screen,PANEL,(HUD_X,64,WIDTH-HUD_X,HEIGHT-64)); screen.blit(FONT.render('CONTROLLER',True,TEXT),(HUD_X+28,95)); screen.blit(SMALL.render('Mode: Keyboard simulator',True,ACCENT),(HUD_X+28,130))
+    pygame.draw.rect(screen,PANEL,(HUD_X,64,WIDTH-HUD_X,HEIGHT-64)); screen.blit(FONT.render('CONTROLLER',True,TEXT),(HUD_X+28,95)); screen.blit(SMALL.render(f'Mode: {controller_mode}',True,ACCENT),(HUD_X+28,130))
     vals=[f'Roll:  {roll:+.0f}',f'Pitch: {pitch:+.0f}',f'Speed: {ball_vel.length():.0f}',f"Jump:  {'AIR' if ball_height>0 else 'READY'}"]
     for i,line in enumerate(vals): screen.blit(FONT.render(line,True,TEXT),(HUD_X+28,180+i*38))
     box=pygame.Rect(HUD_X+36,355,235,105); pygame.draw.rect(screen,PANEL2,box,border_radius=12); c=pygame.Vector2(box.center); angle=roll*8; rad=math.radians(angle); dx=math.cos(rad)*72; dy=math.sin(rad)*72; pygame.draw.line(screen,ACCENT,(c.x-dx,c.y-dy),(c.x+dx,c.y+dy),4); dot=c+pygame.Vector2(roll*24,pitch*17); pygame.draw.circle(screen,WHITE,dot,8)
@@ -362,9 +437,29 @@ def draw_game():
     return bs
 
 def draw_level_complete():
-    draw_game(); ov=pygame.Surface((GAME_W,HEIGHT),pygame.SRCALPHA); ov.fill((0,0,0,155)); screen.blit(ov,(0,0)); s=BIG.render('LEVEL COMPLETE!',True,WHITE); screen.blit(s,s.get_rect(center=(GAME_W//2,265))); st='★'*stars_earned+'☆'*(3-stars_earned); s=BIG.render(st,True,YELLOW); screen.blit(s,s.get_rect(center=(GAME_W//2,330))); s=FONT.render(f'Final Time: {level_finish_time:.1f}s',True,WHITE); screen.blit(s,s.get_rect(center=(GAME_W//2,395)))
-    bs=[Button((GAME_W//2-125,455,250,52),'Next Level',next_level),Button((GAME_W//2-125,523,250,52),'Retry',restart_level),Button((GAME_W//2-125,591,250,52),'Main Menu',lambda:set_state(MENU))]
-    for b in bs:b.draw()
+    draw_game()
+
+    ov=pygame.Surface((GAME_W,HEIGHT),pygame.SRCALPHA)
+    ov.fill((0,0,0,155))
+    screen.blit(ov,(0,0))
+
+    s=BIG.render('LEVEL COMPLETE!',True,WHITE)
+    screen.blit(s,s.get_rect(center=(GAME_W//2,265)))
+
+    draw_star_rating(GAME_W//2, 330, stars_earned, 3)
+
+    s=FONT.render(f'Final Time: {level_finish_time:.1f}s',True,WHITE)
+    screen.blit(s,s.get_rect(center=(GAME_W//2,395)))
+
+    bs=[
+        Button((GAME_W//2-125,455,250,52),'Next Level',next_level),
+        Button((GAME_W//2-125,523,250,52),'Retry',restart_level),
+        Button((GAME_W//2-125,591,250,52),'Main Menu',lambda:set_state(MENU))
+    ]
+
+    for b in bs:
+        b.draw()
+
     return bs
 
 def draw_game_complete():
@@ -406,4 +501,5 @@ while running:
     update_physics(dt)
     buttons=draw_current(); pygame.display.flip()
 
+stm32_controller.disconnect()
 pygame.quit()

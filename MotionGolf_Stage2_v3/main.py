@@ -1,9 +1,14 @@
 import math
+import atexit
 import sys
 import pygame
 
-from runner import RunnerGame
-from controller import STM32SerialController
+if __package__:
+    from .runner import RunnerGame
+    from .controller import STM32SerialController, ControllerPanel
+else:
+    from runner import RunnerGame
+    from controller import STM32SerialController, ControllerPanel
 
 pygame.init()
 try:
@@ -42,10 +47,14 @@ current_level = 0
 held_keys = set()
 runner = RunnerGame()
 
-# Input mode is kept on Keyboard by default so the game can still be
-# tested normally even when the STM32 is not connected.
-controller_mode = 'Keyboard'
 stm32_controller = STM32SerialController()
+atexit.register(stm32_controller.disconnect)
+controller_panel = ControllerPanel(stm32_controller)
+controller_panel.open = False
+controller_mode = controller_panel.mode
+controller_origin = MENU
+focused = True
+status_message = 'F5: controller settings | F4: calibrate'
 
 settings = {
     'sensitivity':520.0,
@@ -123,9 +132,52 @@ def level(): return levels[current_level]
 def spawn_point(): return pygame.Vector2(level()['spawn'])
 def hole_point(): return pygame.Vector2(level()['hole'])
 
+def discard_input():
+    global roll, pitch
+    held_keys.clear()
+    roll = pitch = 0.0
+    stm32_controller.reset_gesture(preserve_reference=True)
+
+def open_controller():
+    global controller_origin
+    if controller_panel.open:
+        return
+    controller_origin = state
+    if state == PLAYING:
+        toggle_pause()
+    elif state == RUNNER and runner.status == 'playing':
+        runner.pause()
+    discard_input()
+    controller_panel.jump_tests = 0
+    controller_panel.open = True
+
+def close_controller(resume=False):
+    global status_message
+    controller_panel.finish_edit()
+    controller_panel.open = False
+    discard_input()
+    if resume and controller_panel.ready:
+        if state == PAUSED:
+            toggle_pause()
+        elif state == RUNNER and runner.status == 'paused':
+            runner.resume()
+        elif state in (MENU, LEVEL_SELECT, SETTINGS) and focused:
+            begin_level(current_level)
+    elif controller_origin == PLAYING and state == PAUSED and controller_panel.ready and focused:
+        toggle_pause()
+    if not controller_panel.ready:
+        status_message = controller_panel.readiness_reason
+
+def request_jump():
+    global jump_velocity, status_message
+    if (focused and state == PLAYING and not controller_panel.open
+            and controller_panel.ready and ball_height == 0 and not ball_sinking):
+        jump_velocity = settings['jump_power']
+        status_message = 'Jump triggered'
+
 def set_state(s):
     global state, roll, pitch
-    held_keys.clear(); state=s; roll=pitch=0.0
+    discard_input(); state=s; roll=pitch=0.0
 
 def reset_ball(penalty=0.0):
     global ball_pos, ball_height, jump_velocity, water_penalty
@@ -140,7 +192,7 @@ def reset_ball(penalty=0.0):
 
 def begin_level(i):
     global current_level,state,water_penalty,start_ticks,paused_total_ms,pause_started
-    current_level=i; state=PLAYING; held_keys.clear(); water_penalty=0.0; start_ticks=pygame.time.get_ticks(); paused_total_ms=0; pause_started=None; reset_ball(0)
+    current_level=i; state=PLAYING; discard_input(); water_penalty=0.0; start_ticks=pygame.time.get_ticks(); paused_total_ms=0; pause_started=None; reset_ball(0)
 
 def restart_level(): begin_level(current_level)
 
@@ -150,21 +202,29 @@ def current_elapsed():
     return max(0.0,(now-start_ticks-paused_total_ms-extra)/1000.0)
 
 def toggle_pause():
-    global state,pause_started,paused_total_ms
+    global state,pause_started,paused_total_ms,status_message
     now=pygame.time.get_ticks()
     if state==PLAYING:
-        state=PAUSED; pause_started=now; held_keys.clear()
+        state=PAUSED; pause_started=now; discard_input()
     elif state==PAUSED:
+        if not focused:
+            status_message = 'Focus the game before resuming'
+            return
+        if not controller_panel.ready:
+            status_message = controller_panel.readiness_reason
+            open_controller()
+            return
         state=PLAYING
         if pause_started is not None: paused_total_ms += now-pause_started
         pause_started=None
+        discard_input()
 
 def complete_level():
     global state,level_finish_time,stars_earned
     level_finish_time=current_elapsed()+water_penalty
     par=level()['par']
     stars_earned=3 if level_finish_time<=par else 2 if level_finish_time<=par*1.35 else 1
-    ball_vel.update(0,0); state=LEVEL_COMPLETE
+    ball_vel.update(0,0); state=LEVEL_COMPLETE; discard_input()
 
 def next_level():
     if current_level+1 < len(levels): begin_level(current_level+1)
@@ -217,19 +277,12 @@ def update_input():
     global roll, pitch, jump_velocity
 
     if controller_mode == 'STM32':
-        stm32_controller.update()
-
-        if stm32_controller.connected:
+        if controller_panel.ready:
             roll = stm32_controller.roll
             pitch = stm32_controller.pitch
 
-            if (
-                stm32_controller.jump
-                and state == PLAYING
-                and ball_height == 0
-                and not ball_sinking
-            ):
-                jump_velocity = settings['jump_power']
+            if stm32_controller.jump:
+                request_jump()
         else:
             roll = 0.0
             pitch = 0.0
@@ -387,9 +440,10 @@ def draw_game_select():
         ModeCard((620,220,520,240),'THREE-LANE RUNNER','MOTION RUSH','Switch lanes, jump barriers, and slide under gates.',(78,220,218),open_runner),
     ]
     for b in bs:b.draw()
-    centered('Both games share keyboard simulation today and motion-controller input hooks for integration.',SMALL,525,MUTED)
-    bs.append(Button((WIDTH//2-130,575,260,52),'Exit',lambda:sys.exit()))
-    for b in bs[-1:]:b.draw()
+    centered('Controller settings and keyboard fallback are available for both games.',SMALL,525,MUTED)
+    bs.append(Button((WIDTH//2-285,575,275,52),'Controller Settings',open_controller))
+    bs.append(Button((WIDTH//2+20,575,265,52),'Exit',lambda:sys.exit()))
+    for b in bs[-2:]:b.draw()
     return bs
 
 def draw_star(surface, center, outer_radius, inner_radius, color, width=0):
@@ -423,6 +477,7 @@ def draw_star_rating(center_x, center_y, earned, total=3):
 def draw_menu():
     screen.fill(BG); centered('MOTION GOLF',TITLE,150); centered('STM32 Motion-Controlled Mini Golf',FONT,210,MUTED)
     bs=[Button((WIDTH//2-145,300,290,58),'Start Game',lambda:begin_level(0)),Button((WIDTH//2-145,378,290,58),'Level Select',lambda:set_state(LEVEL_SELECT)),Button((WIDTH//2-145,456,290,58),'Settings',lambda:set_state(SETTINGS)),Button((WIDTH//2-145,534,290,58),'Game Select',lambda:set_state(GAME_SELECT))]
+    bs.append(Button((WIDTH//2-145,625,290,52),'Controller (F5)',open_controller))
     for b in bs:b.draw()
     return bs
 
@@ -494,8 +549,10 @@ def draw_game():
 
     screen.blit(FONT.render('CONTROLLER',True,TEXT),(HUD_X+28,158))
     screen.blit(SMALL.render(f'Mode: {controller_mode}',True,ACCENT),(HUD_X+28,186))
+    input_status = status_message if controller_panel.ready else controller_panel.readiness_reason
+    screen.blit(TINY.render(input_status[:38],True,MUTED),(HUD_X+28,207))
 
-    vals=[f'Roll:  {roll:+.0f}',f'Pitch: {pitch:+.0f}',f'Speed: {ball_vel.length():.0f}',f"Jump:  {'AIR' if ball_height>0 else 'READY'}"]
+    vals=[f'Roll:  {roll:+.2f}',f'Pitch: {pitch:+.2f}',f'Speed: {ball_vel.length():.0f}',f"Jump:  {'AIR' if ball_height>0 else 'READY'}"]
     for i,line in enumerate(vals):
         screen.blit(FONT.render(line,True,TEXT),(HUD_X+28,222+i*34))
 
@@ -516,12 +573,13 @@ def draw_game():
     screen.blit(SMALL.render(f'Difficulty: {difficulty_name}',True,MUTED),(HUD_X+28,565))
 
     bs.extend([
-        Button((HUD_X+25,615,120,45),'Pause',toggle_pause),
+        Button((HUD_X+25,615,120,45),'Resume' if state==PAUSED else 'Pause',toggle_pause),
         Button((HUD_X+160,615,120,45),'Restart',restart_level),
         Button((HUD_X+25,675,255,45),'Game Select',lambda:set_state(GAME_SELECT))
     ])
     for b in bs:b.draw()
-    screen.blit(TINY.render('WASD/Arrows: tilt   Space: jump   F1/F2: pause/restart',True,MUTED),(26,728))
+    hint = ('Tilt: move | Lift: jump' if controller_mode=='STM32' else 'WASD/Arrows: move | Space: jump')
+    screen.blit(TINY.render(hint+' | F1/F2: pause/restart | F3: mode | F4: calibrate | F5: controller',True,MUTED),(26,728))
     if state==PAUSED:
         ov=pygame.Surface((GAME_W,HEIGHT),pygame.SRCALPHA); ov.fill((0,0,0,125)); screen.blit(ov,(0,0)); s=BIG.render('PAUSED',True,WHITE); screen.blit(s,s.get_rect(center=(GAME_W//2,HEIGHT//2)))
     return bs
@@ -572,7 +630,39 @@ while running:
     dt=min(clock.tick(FPS)/1000.0,0.05)
     for event in pygame.event.get():
         if event.type==pygame.QUIT: running=False
-        elif event.type==pygame.WINDOWFOCUSLOST: held_keys.clear()
+        elif event.type==pygame.WINDOWFOCUSLOST:
+            focused = False
+            discard_input()
+            if state == PLAYING:
+                toggle_pause()
+            elif state == RUNNER:
+                runner.pause()
+        elif event.type==pygame.WINDOWFOCUSGAINED:
+            focused = True
+        elif event.type==pygame.KEYDOWN and event.key==pygame.K_F5:
+            if controller_panel.open:
+                close_controller()
+            else:
+                open_controller()
+        elif event.type==pygame.KEYDOWN and event.key==pygame.K_F3:
+            controller_panel.set_mode('Keyboard' if controller_panel.mode=='STM32' else 'STM32')
+            controller_mode = controller_panel.mode
+            discard_input()
+        elif event.type==pygame.KEYDOWN and event.key==pygame.K_F4:
+            discard_input()
+            controller_panel.calibrate()
+        elif controller_panel.open:
+            if event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE:
+                close_controller()
+            else:
+                action = controller_panel.handle_event(event)
+                if action == 'close':
+                    close_controller()
+                elif action == 'start':
+                    close_controller(resume=True)
+                elif action == 'mode':
+                    controller_mode = controller_panel.mode
+                    discard_input()
         elif state==RUNNER:
             if runner.handle_event(event)=='exit':
                 runner.show_menu()
@@ -582,23 +672,38 @@ while running:
             if event.key==pygame.K_ESCAPE:
                 if state in (PLAYING,PAUSED,LEVEL_COMPLETE): set_state(MENU)
                 else: running=False
-            elif event.key==pygame.K_SPACE and state==PLAYING and ball_height==0 and not ball_sinking:
-                jump_velocity=settings['jump_power']
+            elif event.key==pygame.K_SPACE and controller_mode=='Keyboard' and not getattr(event,'repeat',False):
+                request_jump()
             elif event.key in (pygame.K_F1,pygame.K_p) and state in (PLAYING,PAUSED): toggle_pause()
             elif event.key in (pygame.K_F2,pygame.K_r) and state in (PLAYING,PAUSED,LEVEL_COMPLETE): restart_level()
         elif event.type==pygame.KEYUP: held_keys.discard(event.key)
         elif event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
             for b in reversed(buttons):
                 if b.click(event.pos): break
+    # Poll in every scene so menu/setup gestures cannot accumulate in the port.
+    stm32_controller.update()
+    controller_panel.observe()
+    controller_mode = controller_panel.mode
+    if state==PLAYING and controller_mode=='STM32' and not controller_panel.ready:
+        status_message = controller_panel.readiness_reason
+        open_controller()
+
     if state==RUNNER:
-        runner.update(dt)
+        if not controller_panel.open:
+            if controller_mode=='STM32' and controller_panel.ready:
+                runner.set_motion_state(stm32_controller.roll, jump_event=stm32_controller.jump)
+            runner.update(dt)
         runner.draw(screen)
         buttons=[]
     else:
-        if state in (PLAYING,PAUSED): update_input()
-        else: roll=pitch=0.0
+        if state in (PLAYING,PAUSED) and focused and not controller_panel.open:
+            update_input()
+        else:
+            roll=pitch=0.0
         update_physics(dt)
         buttons=draw_current()
+
+    controller_panel.draw(screen,FONT,SMALL)
     pygame.display.flip()
 
 stm32_controller.disconnect()

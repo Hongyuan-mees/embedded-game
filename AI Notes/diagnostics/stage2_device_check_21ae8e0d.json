@@ -1,0 +1,13 @@
+{
+  "ports": [
+    "COM6"
+  ],
+  "connected": true,
+  "port": "COM6",
+  "seconds": 5.0,
+  "valid_packets": 249,
+  "messages": [],
+  "protocol_v2": true,
+  "min_tick_ms": 20,
+  "max_tick_ms": 20
+}

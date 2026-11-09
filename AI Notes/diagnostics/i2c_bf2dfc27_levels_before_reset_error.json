@@ -1,0 +1,72 @@
+[
+  {
+    "step": "released_before_clocks",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "clock_1_released",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "clock_2_released",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "clock_3_released",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "clock_4_released",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "clock_5_released",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "clock_6_released",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "clock_7_released",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "clock_8_released",
+    "scl": 1,
+    "sda": 1
+  },
+  {
+    "step": "clock_9_released",
+    "scl": 1,
+    "sda": 1
+  },
+  {
+    "step": "sda_low",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "both_low",
+    "scl": 0,
+    "sda": 0
+  },
+  {
+    "step": "scl_released",
+    "scl": 1,
+    "sda": 0
+  },
+  {
+    "step": "both_released",
+    "scl": 1,
+    "sda": 1
+  }
+]

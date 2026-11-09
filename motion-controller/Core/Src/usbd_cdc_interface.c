@@ -5,7 +5,7 @@
 #include "usb_device.h"
 
 #define APP_RX_DATA_SIZE  64U
-#define APP_TX_DATA_SIZE  64U
+#define APP_TX_DATA_SIZE  160U
 
 static uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 static uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
@@ -81,6 +81,14 @@ uint8_t CDC_Transmit_FS(uint8_t *buffer, uint16_t length)
     return USBD_BUSY;
   }
 
-  USBD_CDC_SetTxBuffer(&USBD_Device, buffer, length);
+  if ((buffer == NULL) || (length == 0U) || (length > sizeof(UserTxBufferFS)))
+  {
+    return USBD_FAIL;
+  }
+
+  /* A v2 line spans multiple USB packets. Keep a stable private copy until
+     TxState clears, even when main.c prepares its next message. */
+  memcpy(UserTxBufferFS, buffer, length);
+  USBD_CDC_SetTxBuffer(&USBD_Device, UserTxBufferFS, length);
   return USBD_CDC_TransmitPacket(&USBD_Device);
 }

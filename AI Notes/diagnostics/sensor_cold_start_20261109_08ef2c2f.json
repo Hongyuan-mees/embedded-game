@@ -1,0 +1,19 @@
+{
+  "port": "COM6",
+  "raw_seconds": 8.0,
+  "valid_packets": 399,
+  "status": [],
+  "min_tick_ms": 20,
+  "max_tick_ms": 20,
+  "controller": {
+    "seconds": 8.01,
+    "calibration_requested": true,
+    "calibrated": true,
+    "connected": true,
+    "detector": "ready",
+    "jump_events": 0,
+    "errors": [],
+    "disconnect_transitions": 0,
+    "threshold_g": 0.28
+  }
+}

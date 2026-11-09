@@ -1,0 +1,10 @@
+{
+  "port": "COM6",
+  "seconds": 10.0,
+  "valid_packets": 499,
+  "invalid_control_lines": 0,
+  "messages": [],
+  "tick_delta_min_ms": 20,
+  "tick_delta_max_ms": 20,
+  "sample": "MotionPacket(roll=-1.6, pitch=-0.5, jump=False, tick_ms=20313, accel_raw=(164, -412, 15676), gyro_raw=(-642, -11, -16))"
+}

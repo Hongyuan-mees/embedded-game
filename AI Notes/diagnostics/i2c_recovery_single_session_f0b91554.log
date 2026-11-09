@@ -1,0 +1,300 @@
+      -------------------------------------------------------------------
+                       STM32CubeProgrammer v2.19.0                  
+      -------------------------------------------------------------------
+
+ST-LINK SN  : 37FF71064E57343634031343
+ST-LINK FW  : V2J37S7
+Board       : --
+Voltage     : 3.27V
+SWD freq    : 950 KHz
+Connect mode: Hot Plug
+Reset mode  : Software reset
+Device ID   : 0x410
+Revision ID : Rev A
+Device name : STM32F101/F102/F103 Medium-density
+Flash size  : 64 KBytes
+Device type : MCU
+Device CPU  : Cortex-M3
+BL Version  : --
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C04
+
+0x40010C04 : 444444FF
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C0C
+
+0x40010C0C : 00000010
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005400
+
+0x40005400 : 00000001
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005404
+
+0x40005404 : 00000024
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005408
+
+0x40005408 : 00004000
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x4000540C
+
+0x4000540C : 00000000
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x4000541C
+
+0x4000541C : 000000B4
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005420
+
+0x40005420 : 00000025
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005418
+
+0x40005418 : 00000002
+
+
+
+--- SINGLE SESSION ---
+      -------------------------------------------------------------------
+                       STM32CubeProgrammer v2.19.0                  
+      -------------------------------------------------------------------
+
+ST-LINK SN  : 37FF71064E57343634031343
+ST-LINK FW  : V2J37S7
+Board       : --
+Voltage     : 3.27V
+SWD freq    : 950 KHz
+Connect mode: Hot Plug
+Reset mode  : Software reset
+Device ID   : 0x410
+Revision ID : Rev A
+Device name : STM32F101/F102/F103 Medium-density
+Flash size  : 64 KBytes
+Device type : MCU
+Device CPU  : Cortex-M3
+BL Version  : --
+
+Core halted
+Core is halted
+Write 32-bit data
+w @0x40005400:  0x00000000
+
+
+Downloading...
+�������������������������������������������������� 0%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40010c0c:  0x00000310
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40010c04:  0x44444477
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000110
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FDF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000010
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FCF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000110
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FCF8
+
+
+Write 32-bit data
+w @0x40010c0c:  0x00000310
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FEF8
+
+
+Write 32-bit data
+w @0x40010c04:  0x444444ff
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40010c0c:  0x00000010
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40005400:  0x00008000
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40005400:  0x00000000
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40005404:  0x00000024
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40005408:  0x00004000
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x4000540c:  0x00000000
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x4000541c:  0x000000b4
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40005420:  0x00000025
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+Write 32-bit data
+w @0x40005400:  0x00000001
+
+
+Downloading...
+�������������������������������������������������� 50%�������������������������������������������������� 100%
+32-bit data download complete
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005418
+
+0x40005418 : 00000002
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FEF8
+
+
+Core is halted
+Core run
+Core is running

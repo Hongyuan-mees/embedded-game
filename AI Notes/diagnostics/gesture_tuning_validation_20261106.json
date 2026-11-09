@@ -1,0 +1,55 @@
+{
+  "gesture_up_d86908da.jsonl": {
+    "0.1": [
+      170538
+    ],
+    "0.12": [
+      170538
+    ],
+    "0.18": [],
+    "0.3": [],
+    "0.45": [],
+    "0.8": []
+  },
+  "gesture_down_40afd878.jsonl": {
+    "0.1": [],
+    "0.12": [],
+    "0.18": [],
+    "0.3": [],
+    "0.45": [],
+    "0.8": []
+  },
+  "gesture_side_cd06e8a1.jsonl": {
+    "0.1": [],
+    "0.12": [],
+    "0.18": [],
+    "0.3": [],
+    "0.45": [],
+    "0.8": []
+  },
+  "natural_lifts": {
+    "threshold_g": 0.3,
+    "old_events": [],
+    "new_events": [
+      4062194,
+      4064234
+    ],
+    "expected_events": [
+      4062194,
+      4064234
+    ]
+  },
+  "unit_tests": {
+    "passed": 70,
+    "failed": 0
+  },
+  "limits": {
+    "upward_default_g": 0.3,
+    "active_horizontal_ratio_old": 0.5,
+    "active_horizontal_ratio_new": 0.8,
+    "idle_horizontal_floor_new_g": 0.18,
+    "negative_onset_g": -0.08,
+    "negative_impulse_gs": -0.004,
+    "upward_hold_ms": 40
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "source": "live_game_gesture_726d1a1c.jsonl",
+  "unit_tests_passed": 76,
+  "recorded_game_events": [
+    193.7433,
+    196.4873,
+    197.8538
+  ],
+  "recorded_start_host_s": 189.8025,
+  "recorded_reference_ready_host_s": 193.1027,
+  "weaker_lift_peak_g": 0.284,
+  "modified_replay": {
+    "0.3": [
+      193.7433,
+      196.4873,
+      197.8538,
+      204.5553
+    ],
+    "0.25": [
+      193.6939,
+      194.9987,
+      196.453,
+      197.8538,
+      202.3571,
+      203.5286,
+      204.5553
+    ]
+  },
+  "labelled_rejection_replay": {
+    "gesture_down_40afd878.jsonl": {
+      "0.1": 0,
+      "0.12": 0,
+      "0.18": 0,
+      "0.25": 0,
+      "0.3": 0,
+      "0.45": 0,
+      "0.8": 0
+    },
+    "gesture_side_cd06e8a1.jsonl": {
+      "0.1": 0,
+      "0.12": 0,
+      "0.18": 0,
+      "0.25": 0,
+      "0.3": 0,
+      "0.45": 0,
+      "0.8": 0
+    }
+  },
+  "replay_note": "Context reset preservation is inferred from recorded game/calibration states. Replay does not replace a live run of the changed main loop."
+}

@@ -1,0 +1,116 @@
+      -------------------------------------------------------------------
+                       STM32CubeProgrammer v2.19.0                  
+      -------------------------------------------------------------------
+
+ST-LINK SN  : 37FF71064E57343634031343
+ST-LINK FW  : V2J37S7
+Board       : --
+Voltage     : 3.28V
+SWD freq    : 950 KHz
+Connect mode: Hot Plug
+Reset mode  : Software reset
+Device ID   : 0x410
+Revision ID : Rev A
+Device name : STM32F101/F102/F103 Medium-density
+Flash size  : 64 KBytes
+Device type : MCU
+Device CPU  : Cortex-M3
+BL Version  : --
+
+Core is running
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C04
+
+0x40010C04 : 444444FF
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C0C
+
+0x40010C0C : 00000010
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010C08
+
+0x40010C08 : 0000FFF8
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005400
+
+0x40005400 : 00000401
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005404
+
+0x40005404 : 00000024
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005408
+
+0x40005408 : 00004000
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x4000540C
+
+0x4000540C : 00000000
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x4000541C
+
+0x4000541C : 000000B4
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005420
+
+0x40005420 : 00000025
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40005418
+
+0x40005418 : 00000003
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0x40010004
+
+0x40010004 : 04000002
+
+
+
+Reading 32-bit memory content
+  Size          : 4 Bytes
+  Address:      : 0xE0042000
+
+0xE0042000 : 00006410
+
+

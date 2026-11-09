@@ -1,2 +1,2 @@
 pygame-ce
-pyserial
+pyserial>=3.5

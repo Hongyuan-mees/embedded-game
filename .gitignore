@@ -20,3 +20,10 @@ __pycache__/
 # OS files
 Thumbs.db
 .DS_Store
+
+# Python local environment and cache
+.venv/
+__pycache__/
+*.pyc
+MotionGolf_Stage1_v4/user_settings.json
+MotionGolf_Stage1_v4/user_settings.json*.tmp

@@ -1,0 +1,24 @@
+[
+  {
+    "threshold_g": 0.12,
+    "replay": "real_upward_trace_in_actual_main_loop",
+    "max_ball_height": 72.4,
+    "airborne_frames": 40,
+    "settings_closed": true,
+    "paused": false,
+    "last_status": "Jump triggered",
+    "calibrated_after_controller_closed": false,
+    "measurement_note": "GameIntegrationTests closes the controller at game exit; calibrated is reset by close(). Jump height and airborne frames were observed during the actual main loop."
+  },
+  {
+    "threshold_g": 0.3,
+    "replay": "real_upward_trace_in_actual_main_loop",
+    "max_ball_height": 0.0,
+    "airborne_frames": 0,
+    "settings_closed": true,
+    "paused": false,
+    "last_status": "Resumed",
+    "calibrated_after_controller_closed": false,
+    "measurement_note": "GameIntegrationTests closes the controller at game exit; calibrated is reset by close(). Jump height and airborne frames were observed during the actual main loop."
+  }
+]

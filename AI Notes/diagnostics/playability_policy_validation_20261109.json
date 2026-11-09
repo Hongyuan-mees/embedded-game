@@ -1,0 +1,73 @@
+{
+  "policy": "playability_first_v1",
+  "tests_passed": 79,
+  "default_threshold_g": 0.3,
+  "cooldown_s": 0.7,
+  "downward_threshold_g": -0.25,
+  "downward_holdoff_s": 0.12,
+  "sideways_veto": false,
+  "rotation_veto": false,
+  "historical_trace_events": {
+    "gesture_up_d86908da.jsonl": {
+      "0.1": [
+        170538
+      ],
+      "0.12": [
+        170538
+      ],
+      "0.18": [
+        170938
+      ],
+      "0.28": [
+        170978
+      ],
+      "0.3": [
+        170978
+      ],
+      "0.45": []
+    },
+    "gesture_down_40afd878.jsonl": {
+      "0.1": [
+        307681
+      ],
+      "0.12": [
+        307681
+      ],
+      "0.18": [
+        307681
+      ],
+      "0.28": [],
+      "0.3": [],
+      "0.45": []
+    },
+    "gesture_side_cd06e8a1.jsonl": {
+      "0.1": [
+        520396
+      ],
+      "0.12": [
+        520396
+      ],
+      "0.18": [
+        520396
+      ],
+      "0.28": [
+        520416
+      ],
+      "0.3": [],
+      "0.45": []
+    }
+  },
+  "note": "Nonzero downward/sideways events can now be accepted tradeoffs, not automatic regression failures. No live experience is claimed before hardware recovery and restart.",
+  "natural_lift_fixture": {
+    "annotated_lift_ticks": [
+      4062194,
+      4064234
+    ],
+    "events": [
+      4059754,
+      4062194,
+      4064234
+    ],
+    "accepted_extra_tick": 4059754
+  }
+}

@@ -1,0 +1,28 @@
+      -------------------------------------------------------------------
+                       STM32CubeProgrammer v2.19.0                  
+      -------------------------------------------------------------------
+
+ST-LINK SN  : 37FF71064E57343634031343
+ST-LINK FW  : V2J37S7
+Board       : --
+Voltage     : 3.28V
+SWD freq    : 950 KHz
+Connect mode: Hot Plug
+Reset mode  : Software reset
+Device ID   : 0x410
+Revision ID : Rev A
+Device name : STM32F101/F102/F103 Medium-density
+Flash size  : 64 KBytes
+Device type : MCU
+Device CPU  : Cortex-M3
+BL Version  : --
+
+Core halted
+Write 32-bit data
+w @0x40005400:  0x00000400
+
+
+Downloading...
+�������������������������������������������������� 0%�������������������������������������������������� 100%
+
+Error: Failed to download data! If it's a Flash memory, it may be not erased or protected

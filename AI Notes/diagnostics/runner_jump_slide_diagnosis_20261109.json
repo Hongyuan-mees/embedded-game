@@ -1,0 +1,38 @@
+{
+  "trace": "live_game_gesture_9b258b23.jsonl",
+  "scope_host_seconds": [
+    0,
+    224.2
+  ],
+  "jump_events": 6,
+  "jump_events_while_sliding": 0,
+  "last_jump_host_s": 123.3368,
+  "slide_starts": 14,
+  "first_slide_host_s": 127.5314,
+  "snapshots": [
+    {
+      "host_s": 90.0015,
+      "accel_magnitude_g": 0.966,
+      "estimated_vertical_g": -0.002,
+      "raw_pitch_deg": -6.5
+    },
+    {
+      "host_s": 125.0006,
+      "accel_magnitude_g": 1.025,
+      "estimated_vertical_g": -0.103,
+      "raw_pitch_deg": -1.2
+    },
+    {
+      "host_s": 169.9846,
+      "accel_magnitude_g": 0.969,
+      "estimated_vertical_g": -0.558,
+      "raw_pitch_deg": -4.4
+    },
+    {
+      "host_s": 219.9973,
+      "accel_magnitude_g": 0.962,
+      "estimated_vertical_g": -1.376,
+      "raw_pitch_deg": -4.4
+    }
+  ]
+}

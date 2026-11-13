@@ -137,6 +137,7 @@ def discard_input():
     held_keys.clear()
     roll = pitch = 0.0
     stm32_controller.reset_gesture(preserve_reference=True)
+    runner.reset_motion_input()
 
 def open_controller():
     global controller_origin
@@ -159,7 +160,7 @@ def close_controller(resume=False):
     if resume and controller_panel.ready:
         if state == PAUSED:
             toggle_pause()
-        elif state == RUNNER and runner.status == 'paused':
+        elif state == RUNNER and runner.status == 'paused' and focused:
             runner.resume()
         elif state in (MENU, LEVEL_SELECT, SETTINGS) and focused:
             begin_level(current_level)
@@ -664,9 +665,13 @@ while running:
                     controller_mode = controller_panel.mode
                     discard_input()
         elif state==RUNNER:
+            previous_runner_status = runner.status
             if runner.handle_event(event)=='exit':
                 runner.show_menu()
                 set_state(GAME_SELECT)
+            if (runner.status != previous_runner_status or
+                    (event.type==pygame.KEYDOWN and event.key in (pygame.K_r,pygame.K_F2))):
+                discard_input()
         elif event.type==pygame.KEYDOWN:
             held_keys.add(event.key)
             if event.key==pygame.K_ESCAPE:
@@ -684,14 +689,18 @@ while running:
     stm32_controller.update()
     controller_panel.observe()
     controller_mode = controller_panel.mode
-    if state==PLAYING and controller_mode=='STM32' and not controller_panel.ready:
+    if (controller_mode=='STM32' and not controller_panel.ready and
+            (state==PLAYING or (state==RUNNER and runner.status=='playing'))):
         status_message = controller_panel.readiness_reason
         open_controller()
 
     if state==RUNNER:
+        if not focused:
+            runner.pause()
         if not controller_panel.open:
-            if controller_mode=='STM32' and controller_panel.ready:
-                runner.set_motion_state(stm32_controller.roll, jump_event=stm32_controller.jump)
+            if focused and controller_mode=='STM32' and controller_panel.ready:
+                runner.set_motion_state(stm32_controller.roll, jump_event=stm32_controller.jump,
+                                        pitch=stm32_controller.pitch)
             runner.update(dt)
         runner.draw(screen)
         buttons=[]

@@ -1,0 +1,60 @@
+{
+  "trace": "live_game_gesture_9b258b23.jsonl",
+  "sample_count": 11109,
+  "versions": {
+    "before": {
+      "replayed_event_host_s": [
+        95.3629,
+        101.3427,
+        105.5645,
+        107.9833,
+        111.8765,
+        123.3368
+      ],
+      "snapshots_vertical_g": {
+        "90": -0.002357,
+        "125": -0.10275,
+        "170": -0.557018,
+        "220": -1.371958
+      },
+      "appended_rest_events": 0,
+      "appended_rest_vertical_g": -1.451108,
+      "appended_synthetic_lift_events": 0
+    },
+    "after": {
+      "replayed_event_host_s": [
+        95.3629,
+        101.3262,
+        105.5645,
+        107.9661,
+        111.8603,
+        113.0332,
+        123.3194,
+        131.6584,
+        135.8752,
+        137.6246,
+        138.5888,
+        142.0436,
+        145.9215,
+        147.0811,
+        148.4324,
+        149.1804,
+        150.8497,
+        152.1597,
+        153.8351,
+        160.3376,
+        161.5708,
+        165.6992
+      ],
+      "snapshots_vertical_g": {
+        "90": -0.002357,
+        "125": 0.041888,
+        "170": -0.008178,
+        "220": -0.010102
+      },
+      "appended_rest_events": 0,
+      "appended_rest_vertical_g": -0.008043,
+      "appended_synthetic_lift_events": 1
+    }
+  }
+}

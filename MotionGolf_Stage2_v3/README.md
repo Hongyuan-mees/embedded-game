@@ -7,7 +7,7 @@ The application now starts at a game-selection screen:
 
 ## Motion Rush
 
-Motion Rush currently runs with keyboard simulation:
+Motion Rush supports STM32 lane changes, jumps, rear-tilt slides and keyboard fallback:
 
 - `A / D` or `Left / Right`: switch between three lanes.
 - `W`, `Up`, or `Space`: jump over low barriers.
@@ -16,11 +16,40 @@ Motion Rush currently runs with keyboard simulation:
 - `R / F2`: restart.
 - `Esc`: leave the run or return to the game-selection screen.
 
-The runner exposes `set_motion_state()` for future STM32 input integration. Roll is
-already mapped to the three lanes. When the shared controller panel is in `STM32`
-mode, Roll selects a lane and the verified upward gesture triggers a jump. Slide is
-still keyboard-only until the firmware emits a separate downward-gesture event.
-Lane, Jump, and Slide input remain available from the keyboard at any time.
+In STM32 mode, F4 calibrates the neutral grip. Each left/right tilt moves one lane
+in that direction; returning to neutral keeps the lane and arms the next gesture.
+For example: center -> left tilt -> left lane -> neutral (still left lane) -> right
+tilt -> center lane. Holding that right tilt for 0.80 seconds takes another step
+into the right lane. Continued tilt repeats every 0.35 seconds; returning to neutral
+stops repeats and preserves the current lane. The outer lanes never wrap around.
+
+`set_motion_state()` accepts normalized Roll/Pitch in [-1, 1]. A lane command uses
+Roll +/-0.40; absolute Roll <=0.10 rearms it. With the default shared 4-degree dead
+zone and 25-degree full scale, these correspond to about 12.4 and 6.1 degrees from
+the calibrated grip. Rear tilt uses positive mapped Pitch >=0.60 (about 16.6 degrees)
+held for 0.16 seconds to request one slide. An upward jump event during that brief
+confirmation cancels the pending slide and jumps first. Once the 0.60 trigger is
+crossed, holding Pitch >=0.45 keeps the request valid despite small angle wobble.
+Return to Pitch <=0.30 (about 10.3 degrees back, or further forward) to rearm;
+holding the rear tilt does not repeat slides. Forward tilt does not trigger a slide.
+The existing upward gesture triggers jump. Slides retain the existing 0.72-second
+duration and require the runner to be grounded and ready. If confirmation finishes
+in the air or during the brief landing action lock, the request waits while the
+rear tilt remains held and slides once ready. Releasing the tilt, a new upward
+jump event, or a scene/input reset cancels it. Keyboard S / Down remains immediate
+and does not queue a future slide.
+After starting/resuming or changing input mode, return to neutral before a new tilt
+command. The shared jump detector now recovers gravity direction and gyro bias from
+0.30 seconds of stable raw IMU readings, independently of its estimated vertical
+acceleration, so a drifted estimate cannot prevent its own recovery. This recovery
+does not add a new stillness requirement for every jump. Firmware is unchanged.
+
+F3 selects Keyboard mode. Keyboard lane, jump and slide commands remain available
+in either mode; neutral STM32 input no longer overrides keyboard lane changes.
+F5 opens the shared controller
+panel. Missing/stale sensor data pauses the run and opens the panel; reconnect,
+calibrate and use Start / Resume, or switch to Keyboard to continue. Focus loss
+pauses the run and returning to the window requires manual resume.
 
 新增：
 - 正式主菜单

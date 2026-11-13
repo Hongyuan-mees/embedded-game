@@ -25,6 +25,7 @@ class UpwardJumpDetector:
     DOWNWARD_THRESHOLD_G = -0.25
     DOWNWARD_HOLDOFF_SECONDS = 0.12
     TRANSITION_REST_SECONDS = 0.08
+    REFERENCE_REST_SAMPLES = 15
 
     def __init__(self, threshold_g=DEFAULT_THRESHOLD):
         self.set_threshold(threshold_g)
@@ -47,6 +48,7 @@ class UpwardJumpDetector:
         self._gravity = None
         self._bias = (0.0, 0.0, 0.0)
         self._initial = deque(maxlen=20)
+        self._reference_rest = deque(maxlen=self.REFERENCE_REST_SAMPLES)
         self._time = self._above_time = 0.0
         self._candidate_at = self._locked_at = 0.0
         self._downward_until = 0.0
@@ -97,6 +99,25 @@ class UpwardJumpDetector:
                                len(self._initial) for i in range(3))
             self.state = "ready"
             return False
+
+        # Assess rest from measured samples, independently of the estimated
+        # gravity. A drifted estimate must not disable its own recovery.
+        if abs(magnitude - self._rest_g) <= 0.06 and _norm(gyro_dps) < 12.0:
+            self._reference_rest.append((accel_g, gyro_dps))
+        else:
+            self._reference_rest.clear()
+        if len(self._reference_rest) == self.REFERENCE_REST_SAMPLES:
+            stable_accel = all(max(row[0][axis] for row in self._reference_rest) -
+                               min(row[0][axis] for row in self._reference_rest) <= 0.04
+                               for axis in range(3))
+            stable_gyro = all(max(row[1][axis] for row in self._reference_rest) -
+                              min(row[1][axis] for row in self._reference_rest) <= 2.0
+                              for axis in range(3))
+            if stable_accel and stable_gyro:
+                self._gravity = _unit(tuple(sum(row[0][i] for row in self._reference_rest) /
+                                            self.REFERENCE_REST_SAMPLES for i in range(3)))
+                self._bias = tuple(sum(row[1][i] for row in self._reference_rest) /
+                                   self.REFERENCE_REST_SAMPLES for i in range(3))
 
         gyro = tuple(a - b for a, b in zip(gyro_dps, self._bias))
         wx, wy, wz = (math.radians(x) for x in gyro)

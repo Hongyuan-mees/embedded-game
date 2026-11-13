@@ -42,6 +42,7 @@ def main():
         panel = game.get("controller_panel")
         controller = game.get("serial_input") or game.get("stm32_controller")
         scene = game.get("state")
+        runner = game.get("runner")
         return {
             "focused": game.get("focused"),
             "paused": game.get("paused", scene == "paused"),
@@ -56,10 +57,19 @@ def main():
             "threshold_g": controller.detector.threshold_g if controller else None,
             "raw_roll": controller.raw_roll if controller else None,
             "raw_pitch": controller.raw_pitch if controller else None,
+            "mapped_pitch": controller.pitch if controller else None,
+            "pitch_zero_deg": controller._pitch_zero if controller else None,
             "level_complete": game.get("level_complete", scene in ("level_complete", "game_complete")),
             "ball_height": game.get("ball_height"),
             "jump_velocity": game.get("jump_velocity"),
             "status": game.get("status_message"),
+            "runner_status": runner.status if runner else None,
+            "runner_lane": runner.target_lane if runner else None,
+            "runner_mode": runner.mode if runner else None,
+            "runner_height": runner.player_height if runner else None,
+            "runner_slide_pending_s": runner._slide_confirm_time if runner else None,
+            "runner_slide_armed": runner._slide_armed if runner else None,
+            "runner_action_lock_s": runner.action_lock if runner else None,
         }
 
     original_update = UpwardJumpDetector.update
@@ -88,6 +98,8 @@ def main():
             peak_g=detector.peak_g, above_time_s=detector._above_time,
             cooldown_remaining_s=cooldown, downward_holdoff_remaining_s=holdoff,
             force_release_seen=detector._released, gyro_speed_dps=gyro_speed,
+            gravity_reference=detector._gravity, gyro_bias_dps=detector._bias,
+            reference_rest_samples=len(detector._reference_rest),
             lock_conditions=conditions, game=view())
         return event
 
@@ -109,7 +121,8 @@ def main():
         stable = {k: current.get(k) for k in (
             "focused", "paused", "settings_open", "mode", "ready", "calibrated",
             "calibrating", "last_error", "threshold_g", "level_complete",
-            "state", "current_level", "ball_sinking")}
+            "state", "current_level", "ball_sinking",
+            "runner_status", "runner_lane", "runner_mode")}
         if stable != last_view:
             log("game_state", **current)
             last_view = stable
@@ -120,7 +133,7 @@ def main():
     print(f"DIAGNOSTIC_TRACE={path}", flush=True)
     log("session", description="Existing game, in-memory logging wrappers only",
         game_package=game_package,
-        recognition_policy="playability_first_v1",
+        recognition_policy="playability_first_reference_recovery_v2",
         default_threshold_g=UpwardJumpDetector.DEFAULT_THRESHOLD,
         cooldown_seconds=UpwardJumpDetector.COOLDOWN_SECONDS,
         downward_threshold_g=UpwardJumpDetector.DOWNWARD_THRESHOLD_G,

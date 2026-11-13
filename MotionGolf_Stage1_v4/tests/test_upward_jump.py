@@ -71,6 +71,54 @@ class GestureTests(unittest.TestCase):
         self.assertEqual(self.detector.state, "ready")
         self.assertEqual(self.feed((0, 0, 1.5), 3), 1)
 
+    def test_drifted_gravity_and_bad_bias_recover_from_measured_rest(self):
+        self.settle()
+        self.detector._gravity = (0.0, 1.0, 0.0)
+        self.detector._bias = (7.0, 0.0, 0.0)
+        gravity = (0.08, 0.01, 0.96)
+        gyro = (-4.7, 0.1, 0.0)
+        self.assertEqual(self.feed(gravity, 40, gyro), 0)
+        expected_vertical = math.sqrt(sum(a * a for a in gravity)) - self.detector._rest_g
+        self.assertAlmostEqual(self.detector.vertical_g, expected_vertical, places=4)
+        self.assertLess(self.detector.horizontal_g, 0.02)
+        self.assertAlmostEqual(self.detector._bias[0], -4.7)
+        self.assertEqual(self.feed(tuple(1.5 * a for a in gravity), 3, gyro), 1)
+
+    def test_stationary_bias_change_does_not_accumulate_orientation_drift(self):
+        self.settle()
+        self.assertEqual(self.feed(count=2000, gyro=(3, 0, 0)), 0)
+        self.assertLess(abs(self.detector.vertical_g), 0.02)
+        self.assertLess(self.detector.horizontal_g, 0.02)
+        self.assertEqual(self.feed((0, 0, 1.45), 3, gyro=(3, 0, 0)), 1)
+
+    def test_recorded_stationary_data_recovers_the_reported_drift(self):
+        path = Path(__file__).with_name('fixtures') / 'drifted_reference_rest_20261109.json'
+        trace = json.loads(path.read_text(encoding='utf-8'))
+        detector = UpwardJumpDetector(trace['threshold_g'])
+        seed = trace['seed']
+        detector._gravity = tuple(seed['gravity'])
+        detector._bias = tuple(seed['bias_dps'])
+        detector._rest_g = seed['rest_g']
+        detector._tick = seed['tick_ms']
+        detector.state = 'ready'
+        self.assertLess(seed['vertical_g'], -0.5)
+        for tick, accel, gyro in trace['samples']:
+            self.assertFalse(detector.update(accel, gyro, tick))
+        self.assertLess(abs(detector.vertical_g), 0.03)
+        self.assertLess(detector.horizontal_g, 0.03)
+        events = 0
+        for _ in range(3):
+            tick = (tick + 20) & 0xffffffff
+            events += detector.update(tuple(1.5 * a for a in accel), gyro, tick)
+        self.assertEqual(events, 1)
+
+    def test_inverted_reference_recovers_without_false_jump(self):
+        self.settle()
+        self.detector._gravity = (0.0, 0.0, -1.0)
+        self.assertEqual(self.feed(count=40), 0)
+        self.assertLess(abs(self.detector.vertical_g), 0.02)
+        self.assertEqual(self.feed((0, 0, 1.5), 3), 1)
+
     def test_pure_lateral_motion_without_upward_force_does_not_jump(self):
         self.settle()
         for accel in [(0.8, 0, 1), (0, -0.8, 1)]:

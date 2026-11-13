@@ -32,6 +32,14 @@ class RunnerGame:
     VIEW_DISTANCE = 100.0
     LANE_WIDTH = 244.0
     RUN_SPEED = 20.0
+    LANE_TILT_THRESHOLD = 0.40
+    LANE_CENTER_THRESHOLD = 0.10
+    LANE_REPEAT_DELAY = 0.80
+    LANE_REPEAT_INTERVAL = 0.35
+    SLIDE_TILT_THRESHOLD = 0.60
+    SLIDE_RELEASE_THRESHOLD = 0.30
+    SLIDE_HOLD_THRESHOLD = 0.45
+    SLIDE_CONFIRM_SECONDS = 0.16
 
     BG = (15, 18, 28)
     PANEL = (27, 32, 43)
@@ -81,7 +89,16 @@ class RunnerGame:
         self.spawn_timer = 1.2
         self.obstacles: list[Obstacle] = []
         self.pickups_list: list[Pickup] = []
+        self.reset_motion_input()
+
+    def reset_motion_input(self) -> None:
+        """Require neutral before new commands after a scene/input transition."""
         self.sensor_roll = 0.0
+        self._lane_armed = False
+        self._lane_direction = 0
+        self._lane_repeat_time = 0.0
+        self._slide_armed = False
+        self._slide_confirm_time = None
 
     def show_menu(self) -> None:
         self.status = "menu"
@@ -117,35 +134,56 @@ class RunnerGame:
         self.jump_velocity = 7.2
         self.player_height = 0.01
 
-    def request_slide(self) -> None:
+    def request_slide(self) -> bool:
         if (
             self.status != "playing"
             or self.mode != "running"
             or self.action_lock > 0
         ):
-            return
+            return False
         self.mode = "sliding"
         self.slide_timer = 0.72
+        return True
 
     def set_motion_state(
         self,
         roll: float,
         jump_event: bool = False,
         slide_event: bool = False,
+        *,
+        pitch: float = 0.0,
     ) -> None:
-        """Input hook for the future STM32 controller integration."""
+        """Normalized tilt: lane steps/repeat, and delayed rear-tilt slides."""
         self.sensor_roll = roll
         if self.status != "playing":
             return
 
-        if roll <= -10.0:
-            self.target_lane = 0
-        elif roll >= 10.0:
-            self.target_lane = 2
-        elif abs(roll) <= 6.0:
-            self.target_lane = 1
+        if abs(roll) <= self.LANE_CENTER_THRESHOLD:
+            self._lane_armed = True
+            self._lane_direction = 0
+            self._lane_repeat_time = 0.0
+        elif abs(roll) >= self.LANE_TILT_THRESHOLD:
+            direction = -1 if roll < 0 else 1
+            if self._lane_armed or (self._lane_direction and direction != self._lane_direction):
+                self._lane_direction = direction
+                self.move_lane(direction)
+                self._lane_repeat_time = self.LANE_REPEAT_DELAY
+                self._lane_armed = False
+        elif self._lane_direction:
+            self._lane_repeat_time = self.LANE_REPEAT_DELAY
+
+        if pitch <= self.SLIDE_RELEASE_THRESHOLD:
+            self._slide_armed = True
+            self._slide_confirm_time = None
+        elif self._slide_armed and pitch >= self.SLIDE_TILT_THRESHOLD:
+            if self._slide_confirm_time is None:
+                self._slide_confirm_time = self.SLIDE_CONFIRM_SECONDS
+        elif pitch < self.SLIDE_HOLD_THRESHOLD or not self._slide_armed:
+            self._slide_confirm_time = None
 
         if jump_event:
+            self._slide_confirm_time = None
+            self._slide_armed = False
             self.request_jump()
         if slide_event:
             self.request_slide()
@@ -202,6 +240,19 @@ class RunnerGame:
     def update(self, dt: float) -> None:
         if self.status != "playing":
             return
+
+        if self._lane_direction and abs(self.sensor_roll) >= self.LANE_TILT_THRESHOLD:
+            self._lane_repeat_time -= dt
+            if self._lane_repeat_time <= 1e-9:
+                self.move_lane(self._lane_direction)
+                self._lane_repeat_time = self.LANE_REPEAT_INTERVAL
+        if self._slide_confirm_time is not None:
+            self._slide_confirm_time = max(0.0, self._slide_confirm_time - dt)
+            # A confirmed rear tilt remains valid while held. Do not consume it
+            # during a jump/landing lock; release or a new jump cancels it above.
+            if self._slide_confirm_time <= 1e-9 and self.request_slide():
+                self._slide_confirm_time = None
+                self._slide_armed = False
 
         self.invulnerable = max(0.0, self.invulnerable - dt)
         self.hit_flash = max(0.0, self.hit_flash - dt)
@@ -410,9 +461,9 @@ class RunnerGame:
         pygame.draw.rect(screen, (64, 78, 98), card, 1, border_radius=20)
 
         hints = [
-            ("A / D or LEFT / RIGHT", "Switch between three lanes"),
-            ("W / SPACE", "Jump over low barriers"),
-            ("S / DOWN", "Slide under overhead gates"),
+            ("TILT LEFT/RIGHT or A/D", "Tilt steps; hold repeats"),
+            ("LIFT or W / SPACE", "Jump over low barriers"),
+            ("TILT BACK or S / DOWN", "Hold back briefly to slide"),
         ]
         for index, (key, description) in enumerate(hints):
             y = 270 + index * 52
@@ -436,7 +487,7 @@ class RunnerGame:
         )
 
         footer = self.small.render(
-            "Keyboard mode is active. The runner also exposes motion-input hooks.",
+            "F4 calibrate | F3 control mode | F5 controller settings",
             True,
             self.MUTED,
         )
@@ -448,7 +499,7 @@ class RunnerGame:
         title = self.font.render("MOTION RUSH", True, self.TEXT)
         screen.blit(title, (24, 19))
         controls = self.small.render(
-            "A/D lanes  |  W/Space jump  |  S/Down slide  |  P pause",
+            "Tilt: lane step / back slide | Lift: jump | A/D W/S backup | P pause",
             True,
             self.MUTED,
         )

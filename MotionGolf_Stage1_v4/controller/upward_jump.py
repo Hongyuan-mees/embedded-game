@@ -26,6 +26,8 @@ class UpwardJumpDetector:
     DOWNWARD_HOLDOFF_SECONDS = 0.12
     TRANSITION_REST_SECONDS = 0.08
     REFERENCE_REST_SAMPLES = 15
+    SHORT_PULSE_WINDOW = 0.08
+    SHORT_PULSE_IMPULSE_SECONDS = 0.04
 
     def __init__(self, threshold_g=DEFAULT_THRESHOLD):
         self.set_threshold(threshold_g)
@@ -49,6 +51,8 @@ class UpwardJumpDetector:
         self._bias = (0.0, 0.0, 0.0)
         self._initial = deque(maxlen=20)
         self._reference_rest = deque(maxlen=self.REFERENCE_REST_SAMPLES)
+        self._pulse = deque()
+        self.event_reason = None
         self._time = self._above_time = 0.0
         self._candidate_at = self._locked_at = 0.0
         self._downward_until = 0.0
@@ -63,9 +67,11 @@ class UpwardJumpDetector:
         self._locked_at = self._time
         self._above_time = 0.0
         self._released = False
+        self._pulse.clear()
 
     def update(self, accel_g, gyro_dps, tick_ms):
         """Return one event. Device sample time, not host arrival time, sets dt."""
+        self.event_reason = None
         if self._tick is None:
             self._tick = tick_ms
             dt = 0.02
@@ -164,6 +170,7 @@ class UpwardJumpDetector:
         if self._time < self._downward_until - 1e-9:
             self.state = "ready"
             self._above_time = 0.0
+            self._pulse.clear()
             return False
         if self.state == "ready":
             if self.vertical_g <= 0.08:
@@ -171,15 +178,35 @@ class UpwardJumpDetector:
             self.state = "lifting"
             self._candidate_at = self._time
             self._above_time = 0.0
+            self._pulse.clear()
         if self.state == "lifting":
-            self._above_time = self._above_time + dt if self.vertical_g >= self.threshold_g else 0.0
-            if self._above_time >= 0.04 - 1e-9:
+            # One reading represents at most one nominal 50Hz sample. A late
+            # packet must not masquerade as a sustained force by itself.
+            sample_dt = min(dt, 0.02)
+            self._above_time = self._above_time + sample_dt if self.vertical_g >= self.threshold_g else 0.0
+            if self.vertical_g >= self.threshold_g * 0.5:
+                self._pulse.append((self._time, sample_dt, self.vertical_g))
+            else:
+                self._pulse.clear()
+            while self._pulse and self._time - self._pulse[0][0] >= self.SHORT_PULSE_WINDOW - 1e-9:
+                self._pulse.popleft()
+            peak = max((row[2] for row in self._pulse), default=0.0)
+            # A huge isolated spike must not borrow a tiny shoulder as support.
+            support_floor = max(self.threshold_g * 0.5, peak / 3.0)
+            supported_peak = (sum(row[2] >= support_floor - 1e-9 for row in self._pulse) >= 2
+                              and peak >= self.threshold_g
+                              and sum(row[1] * row[2] for row in self._pulse) >=
+                              self.threshold_g * self.SHORT_PULSE_IMPULSE_SECONDS - 1e-9)
+            if self._above_time >= 0.04 - 1e-9 or supported_peak:
+                self.event_reason = 'sustained' if self._above_time >= 0.04 - 1e-9 else 'supported_short_peak'
                 self._lock()
                 return True
             if self.vertical_g < 0.04:
                 self.state = "ready"
                 self._above_time = 0.0
+                self._pulse.clear()
             elif self._time - self._candidate_at > 0.25:
                 self.state = "ready"
                 self._above_time = 0.0
+                self._pulse.clear()
         return False

@@ -1,0 +1,265 @@
+{
+  "source": "live_game_gesture_f710bc28.jsonl",
+  "sample_count": 11710,
+  "full_trace": {
+    "before": [
+      {
+        "host_s": 34.7077,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 39.608,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 54.5284,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 55.5706,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 68.9375,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 77.0178,
+        "reason": null,
+        "status": "paused",
+        "mode": "running"
+      },
+      {
+        "host_s": 127.0442,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 131.7291,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 134.223,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 149.0532,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 151.1584,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 153.3441,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 155.3374,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 156.3441,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 192.2342,
+        "reason": null,
+        "status": "paused",
+        "mode": "jumping"
+      },
+      {
+        "host_s": 203.3711,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 212.2216,
+        "reason": null,
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 244.6837,
+        "reason": null,
+        "status": "paused",
+        "mode": "running"
+      }
+    ],
+    "after": [
+      {
+        "host_s": 16.2195,
+        "reason": "supported_short_peak",
+        "status": "menu",
+        "mode": "running"
+      },
+      {
+        "host_s": 34.7077,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 39.5918,
+        "reason": "supported_short_peak",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 54.4791,
+        "reason": "supported_short_peak",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 55.293,
+        "reason": "supported_short_peak",
+        "status": "playing",
+        "mode": "jumping"
+      },
+      {
+        "host_s": 65.6536,
+        "reason": "supported_short_peak",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 67.114,
+        "reason": "supported_short_peak",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 68.9375,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 77.0178,
+        "reason": "sustained",
+        "status": "paused",
+        "mode": "running"
+      },
+      {
+        "host_s": 127.0442,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 131.6963,
+        "reason": "supported_short_peak",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 134.223,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 147.0753,
+        "reason": "supported_short_peak",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 149.0532,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 151.1584,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 153.3441,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 155.3374,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 156.3441,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 192.2342,
+        "reason": "sustained",
+        "status": "paused",
+        "mode": "jumping"
+      },
+      {
+        "host_s": 196.4594,
+        "reason": "supported_short_peak",
+        "status": "paused",
+        "mode": "jumping"
+      },
+      {
+        "host_s": 203.3711,
+        "reason": "sustained",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 212.1874,
+        "reason": "supported_short_peak",
+        "status": "playing",
+        "mode": "running"
+      },
+      {
+        "host_s": 244.6666,
+        "reason": "supported_short_peak",
+        "status": "paused",
+        "mode": "running"
+      }
+    ]
+  },
+  "previous_events_without_match_within_150ms": [
+    {
+      "host_s": 55.5706,
+      "reason": null,
+      "status": "playing",
+      "mode": "running"
+    }
+  ],
+  "intent_labels_available": false
+}

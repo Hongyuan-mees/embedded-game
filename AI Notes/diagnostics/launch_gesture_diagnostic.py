@@ -70,6 +70,7 @@ def main():
             "runner_slide_pending_s": runner._slide_confirm_time if runner else None,
             "runner_slide_armed": runner._slide_armed if runner else None,
             "runner_action_lock_s": runner.action_lock if runner else None,
+            "runner_jump_buffer_s": runner._jump_buffer_time if runner else None,
         }
 
     original_update = UpwardJumpDetector.update
@@ -93,6 +94,7 @@ def main():
             conditions.append("await_force_release_after_transition")
         log("sample", tick_ms=tick_ms, accel_g=accel_g, gyro_dps=gyro_dps,
             state_before=before, state_after=detector.state, event=event,
+            event_reason=detector.event_reason,
             reference_available_before=had_gravity,
             vertical_g=detector.vertical_g, horizontal_g=detector.horizontal_g,
             peak_g=detector.peak_g, above_time_s=detector._above_time,
@@ -117,6 +119,23 @@ def main():
                 return result
 
             namespace["request_jump"] = recorded_jump
+            runner = namespace.get("runner")
+            if runner is not None:
+                original_runner_jump = runner.request_jump
+
+                def recorded_runner_jump():
+                    before = view()
+                    accepted = original_runner_jump()
+                    reason = None
+                    if not accepted:
+                        reason = ("not_playing" if before['runner_status'] != 'playing'
+                                  else "action_" + before['runner_mode']
+                                  if before['runner_mode'] != 'running' else "action_lock")
+                    log("runner_jump_request", accepted=accepted, rejection_reason=reason,
+                        before=before, after=view())
+                    return accepted
+
+                runner.request_jump = recorded_runner_jump
         current = view()
         stable = {k: current.get(k) for k in (
             "focused", "paused", "settings_open", "mode", "ready", "calibrated",
@@ -133,7 +152,8 @@ def main():
     print(f"DIAGNOSTIC_TRACE={path}", flush=True)
     log("session", description="Existing game, in-memory logging wrappers only",
         game_package=game_package,
-        recognition_policy="playability_first_reference_recovery_v2",
+        recognition_policy="supported_short_peak_v3",
+        short_pulse_window_seconds=UpwardJumpDetector.SHORT_PULSE_WINDOW,
         default_threshold_g=UpwardJumpDetector.DEFAULT_THRESHOLD,
         cooldown_seconds=UpwardJumpDetector.COOLDOWN_SECONDS,
         downward_threshold_g=UpwardJumpDetector.DOWNWARD_THRESHOLD_G,

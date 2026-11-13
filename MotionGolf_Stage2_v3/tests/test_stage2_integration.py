@@ -171,6 +171,81 @@ class Stage2IntegrationTests(unittest.TestCase):
         self.assertGreater(max(r['runner_height'] for r in seen), 0)
         self.assertFalse(any(r['runner_mode'] == 'sliding' for r in seen))
 
+    def test_runner_supported_short_peak_reaches_actual_jump(self):
+        def plan(n, game):
+            return {2: [self.click((880, 300)), self.key(pygame.K_F4)],
+                    40: [self.key(pygame.K_RETURN)]}.get(n, [])
+
+        def profile(n, tick):
+            force = {60: 1.20, 61: 1.56, 62: 1.22}.get(n, 1)
+            return v2_frame(tick, accel=(0, 0, force))
+
+        _, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=105)
+        self.assertGreater(max(r['runner_height'] for r in seen), 0)
+        self.assertFalse(any(r['runner_mode'] == 'sliding' for r in seen))
+
+    def test_runner_recognized_lift_interrupts_slide_immediately(self):
+        def plan(n, game):
+            return {2: [self.click((880, 300)), self.key(pygame.K_F4)],
+                    40: [self.key(pygame.K_RETURN)]}.get(n, [])
+
+        def profile(n, tick):
+            return v2_frame(tick, pitch=-20 if 45 <= n < 110 else 0,
+                            accel=(0, 0, 1.45 if 60 <= n <= 62 else 1))
+
+        game, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=125)
+        mode_at = {r['frame']: r['runner_mode'] for r in seen}
+        self.assertEqual(mode_at[55], 'sliding')
+        self.assertEqual(mode_at[63], 'jumping')
+        self.assertGreater(next(r for r in seen if r['frame'] == 63)['runner_height'], 0)
+        self.assertFalse(any(r['runner_mode'] == 'sliding' for r in seen if r['frame'] >= 63))
+        self.assertEqual(game['runner'].slide_timer, 0)
+
+    def test_runner_short_peak_just_before_landing_is_buffered_into_next_jump(self):
+        def plan(n, game):
+            return {2: [self.click((880, 300)), self.key(pygame.K_F4)],
+                    40: [self.key(pygame.K_RETURN)]}.get(n, [])
+
+        def profile(n, tick):
+            force = 1.45 if 60 <= n <= 62 else {97: 1.20, 98: 1.56, 99: 1.22}.get(n, 1)
+            return v2_frame(tick, accel=(0, 0, force))
+
+        _, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=150)
+        modes = [r['runner_mode'] for r in seen]
+        jump_starts = sum(mode == 'jumping' and (i == 0 or modes[i - 1] != 'jumping')
+                          for i, mode in enumerate(modes))
+        self.assertEqual(jump_starts, 2)
+        self.assertEqual(next(r for r in seen if r['frame'] == 112)['runner_mode'], 'jumping')
+
+    def test_runner_pause_clears_pending_landing_jump(self):
+        def plan(n, game):
+            return {2: [self.click((880, 300)), self.key(pygame.K_F4)],
+                    40: [self.key(pygame.K_RETURN)],
+                    99: [self.key(pygame.K_F5)],
+                    110: [self.click((750, 100))]}.get(n, [])
+
+        def profile(n, tick):
+            force = 1.45 if 60 <= n <= 62 else {97: 1.20, 98: 1.56}.get(n, 1)
+            return v2_frame(tick, accel=(0, 0, force))
+
+        _, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=145)
+        self.assertTrue(any(r['panel'] for r in seen))
+        self.assertEqual(max(r['runner_height'] for r in seen if r['frame'] >= 125), 0)
+
+    def test_runner_early_airborne_request_expires_without_delayed_jump(self):
+        def plan(n, game):
+            if n == 70:
+                game['runner'].set_motion_state(0, jump_event=True)
+            return {2: [self.click((880, 300)), self.key(pygame.K_F4)],
+                    40: [self.key(pygame.K_RETURN)]}.get(n, [])
+
+        def profile(n, tick):
+            return v2_frame(tick, accel=(0, 0, 1.45 if 60 <= n <= 62 else 1))
+
+        _, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=145)
+        self.assertGreater(max(r['runner_height'] for r in seen), 0)
+        self.assertEqual(max(r['runner_height'] for r in seen if r['frame'] >= 110), 0)
+
     def test_runner_mild_or_brief_rear_tilt_does_not_slide(self):
         def plan(n, game):
             return {2: [self.click((880, 300)), self.key(pygame.K_F4)],

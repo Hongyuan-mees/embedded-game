@@ -38,6 +38,16 @@ in the air or during the brief landing action lock, the request waits while the
 rear tilt remains held and slides once ready. Releasing the tilt, a new upward
 jump event, or a scene/input reset cancels it. Keyboard S / Down remains immediate
 and does not queue a future slide.
+
+Upward detection accepts both the existing sustained pulse and a supported short
+peak; see the shared controller README for the exact force criteria. A recognised
+motion jump that arrives just before landing or during a short action lock has a
+0.20-second input buffer. It jumps once the runner is ready within that window,
+then expires; pause, disconnection and input transitions clear it. This prevents a
+slightly early gesture from being consumed by the detector cooldown without a jump.
+An upward jump command interrupts a grounded slide immediately and clears its
+remaining slide time. Midair double jumps remain disabled. The input buffer is
+for landing/action-lock timing, rather than waiting for an entire slide to end.
 After starting/resuming or changing input mode, return to neutral before a new tilt
 command. The shared jump detector now recovers gravity direction and gyro bias from
 0.30 seconds of stable raw IMU readings, independently of its estimated vertical

@@ -40,6 +40,7 @@ class RunnerGame:
     SLIDE_RELEASE_THRESHOLD = 0.30
     SLIDE_HOLD_THRESHOLD = 0.45
     SLIDE_CONFIRM_SECONDS = 0.16
+    JUMP_BUFFER_SECONDS = 0.20
 
     BG = (15, 18, 28)
     PANEL = (27, 32, 43)
@@ -99,6 +100,7 @@ class RunnerGame:
         self._lane_repeat_time = 0.0
         self._slide_armed = False
         self._slide_confirm_time = None
+        self._jump_buffer_time = 0.0
 
     def show_menu(self) -> None:
         self.status = "menu"
@@ -123,16 +125,20 @@ class RunnerGame:
         if self.status == "playing":
             self.target_lane = max(0, min(2, self.target_lane + delta))
 
-    def request_jump(self) -> None:
+    def request_jump(self) -> bool:
         if (
             self.status != "playing"
-            or self.mode != "running"
+            or self.mode not in ("running", "sliding")
             or self.action_lock > 0
         ):
-            return
+            return False
+        self.slide_timer = 0.0
         self.mode = "jumping"
         self.jump_velocity = 7.2
         self.player_height = 0.01
+        self._jump_buffer_time = 0.0
+        self._slide_confirm_time = None
+        return True
 
     def request_slide(self) -> bool:
         if (
@@ -184,7 +190,8 @@ class RunnerGame:
         if jump_event:
             self._slide_confirm_time = None
             self._slide_armed = False
-            self.request_jump()
+            if not self.request_jump():
+                self._jump_buffer_time = self.JUMP_BUFFER_SECONDS
         if slide_event:
             self.request_slide()
 
@@ -240,6 +247,11 @@ class RunnerGame:
     def update(self, dt: float) -> None:
         if self.status != "playing":
             return
+
+        if self._jump_buffer_time > 0:
+            self._jump_buffer_time = max(0.0, self._jump_buffer_time - dt)
+            if self._jump_buffer_time > 1e-9:
+                self.request_jump()
 
         if self._lane_direction and abs(self.sensor_roll) >= self.LANE_TILT_THRESHOLD:
             self._lane_repeat_time -= dt

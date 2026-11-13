@@ -1,0 +1,161 @@
+{
+  "trace": "live_game_gesture_f710bc28.jsonl",
+  "observed_valid_jump_events_while_playing": 15,
+  "followed_by_actual_jumping": 15,
+  "unlabelled_failed_candidates": [
+    {
+      "host_s_range": [
+        65.58,
+        65.7
+      ],
+      "threshold_g": 0.28,
+      "samples": [
+        {
+          "host_s": 65.5873,
+          "tick_ms": 1081164,
+          "vertical_g": 0.12903618483670387,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 65.6043,
+          "tick_ms": 1081184,
+          "vertical_g": 0.13714768394015753,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 65.621,
+          "tick_ms": 1081204,
+          "vertical_g": 0.3792509515236968,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 65.6536,
+          "tick_ms": 1081224,
+          "vertical_g": 0.2025378015666428,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 65.6704,
+          "tick_ms": 1081244,
+          "vertical_g": -0.07510034792552744,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "ready"
+        },
+        {
+          "host_s": 65.6872,
+          "tick_ms": 1081264,
+          "vertical_g": -0.12135248257658782,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "ready"
+        }
+      ]
+    },
+    {
+      "host_s_range": [
+        67.06,
+        67.2
+      ],
+      "threshold_g": 0.28,
+      "samples": [
+        {
+          "host_s": 67.0646,
+          "tick_ms": 1082644,
+          "vertical_g": 0.19447020349940858,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 67.0809,
+          "tick_ms": 1082664,
+          "vertical_g": 0.21789046223543784,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 67.114,
+          "tick_ms": 1082684,
+          "vertical_g": 0.5628018545509212,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 67.1301,
+          "tick_ms": 1082704,
+          "vertical_g": 0.22251051790755016,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 67.147,
+          "tick_ms": 1082724,
+          "vertical_g": 0.08661248796039178,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "lifting"
+        },
+        {
+          "host_s": 67.1631,
+          "tick_ms": 1082744,
+          "vertical_g": -0.015251348704957257,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "ready"
+        },
+        {
+          "host_s": 67.1808,
+          "tick_ms": 1082764,
+          "vertical_g": -0.329856303951101,
+          "event": false,
+          "mode": "running",
+          "lock_s": 0.0,
+          "detector_state": "ready"
+        }
+      ]
+    }
+  ],
+  "independent_connection_errors": [
+    {
+      "host_s": 80.0305,
+      "error": "Serial read failed: ClearCommError failed (PermissionError(13, '设备不识别此命令。', None, 22))"
+    },
+    {
+      "host_s": 105.6323,
+      "error": "Serial read failed: ClearCommError failed (PermissionError(13, '设备不识别此命令。', None, 22))"
+    },
+    {
+      "host_s": 156.7415,
+      "error": "MPU6050_ERROR,I2C_READ_FAILED"
+    },
+    {
+      "host_s": 160.7527,
+      "error": "MPU6050_ERROR,HW_SCAN_COUNT:0,FIRST:0x00,WHO:0x00"
+    }
+  ],
+  "latest_sample_error": null
+}

@@ -219,6 +219,67 @@ class GestureTests(unittest.TestCase):
         self.feed(count=50)
         self.assertEqual(self.feed((0, 0, 1.2), 10), 0)
 
+    def test_short_peak_with_adjacent_upward_support_triggers_once(self):
+        self.settle()
+        self.detector.set_threshold(0.28)
+        self.settle()
+        events = sum(self.feed((0, 0, 1 + v)) for v in (0.13, 0.137, 0.379, 0.203))
+        self.assertEqual(events, 1)
+        self.assertEqual(self.detector.event_reason, 'supported_short_peak')
+        self.assertEqual(self.feed(count=50), 0)
+        self.assertEqual(self.feed((0, 0, 1.45), 3), 1)
+
+    def test_short_peak_can_use_a_leading_shoulder(self):
+        self.settle()
+        self.assertEqual(self.feed((0, 0, 1.20)), 0)
+        self.assertEqual(self.feed((0, 0, 1.56)), 1)
+        self.assertEqual(self.detector.event_reason, 'supported_short_peak')
+
+    def test_large_spike_cannot_borrow_a_small_shoulder(self):
+        self.settle()
+        self.assertEqual(self.feed((0, 0, 2.47)), 0)
+        self.assertEqual(self.feed((0, 0, 1.24)), 0)
+        self.assertEqual(self.feed(count=20), 0)
+
+    def test_short_peak_requires_enough_combined_force(self):
+        self.settle()
+        self.assertEqual(self.feed((0, 0, 1.31)), 0)
+        self.assertEqual(self.feed((0, 0, 1.16)), 0)
+        self.assertEqual(self.feed(count=20), 0)
+
+    def test_delayed_single_sample_cannot_supply_a_full_confirmation(self):
+        self.settle()
+        self.tick += 80
+        self.assertFalse(self.detector.update((0, 0, 1.6), (0, 0, 0), self.tick))
+        self.assertEqual(self.feed(), 0)
+
+    def test_short_peak_does_not_bridge_a_pause_transition(self):
+        self.settle()
+        self.assertEqual(self.feed((0, 0, 1.25)), 0)
+        self.detector.reset(preserve_reference=True)
+        self.assertEqual(self.feed((0, 0, 1.56)), 0)
+        self.feed(count=10)
+        self.assertEqual(self.feed((0, 0, 1.56)), 0)
+
+    def test_recorded_rejected_short_pulses_now_meet_supported_peak_policy(self):
+        path = Path(__file__).with_name('fixtures') / 'supported_short_pulses_20261113.json'
+        trace = json.loads(path.read_text(encoding='utf-8'))
+        for clip in trace['clips']:
+            with self.subTest(clip=clip['host_s_range']):
+                detector = UpwardJumpDetector(trace['threshold_g'])
+                seed = clip['seed']
+                detector._gravity = tuple(seed['gravity'])
+                detector._bias = tuple(seed['bias_dps'])
+                detector._rest_g = seed['rest_g']
+                detector._tick = seed['tick_ms']
+                detector.state = 'ready'
+                events = []
+                for tick, accel, gyro in clip['samples']:
+                    if detector.update(accel, gyro, tick):
+                        events.append(tick)
+                        self.assertEqual(detector.event_reason, 'supported_short_peak')
+                self.assertEqual(events, clip['comparison_event_ticks']['after'])
+
     def test_threshold_change_affects_force_and_resets_candidate(self):
         self.settle()
         self.detector.set_threshold(0.5)

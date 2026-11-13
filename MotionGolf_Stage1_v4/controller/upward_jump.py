@@ -17,6 +17,40 @@ def _unit(v):
     return tuple(x / length for x in v) if length > 1e-9 else (0.0, 0.0, 1.0)
 
 
+def _cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0])
+
+
+def _rotate_gravity(gravity, angular_velocity, dt):
+    speed = _norm(angular_velocity)
+    if speed < 1e-9:
+        return gravity
+    axis = tuple(v / speed for v in angular_velocity)
+    angle = speed * dt
+    cosine, sine = math.cos(angle), math.sin(angle)
+    tangent = _cross(gravity, axis)
+    projection = sum(a * b for a, b in zip(gravity, axis))
+    return _unit(tuple(cosine * g + sine * t + (1 - cosine) * projection * a
+                       for g, t, a in zip(gravity, tangent, axis)))
+
+
+def _towards_direction(gravity, measured, fraction):
+    """Spherical correction, including a recoverable antiparallel reference."""
+    dot = max(-1.0, min(1.0, sum(a * b for a, b in zip(gravity, measured))))
+    if dot > 0.9995:
+        return _unit(tuple((1 - fraction) * a + fraction * b
+                           for a, b in zip(gravity, measured)))
+    angle = math.acos(dot)
+    tangent = tuple(b - dot * a for a, b in zip(gravity, measured))
+    if _norm(tangent) < 1e-6:
+        axis = (1.0, 0.0, 0.0) if abs(gravity[0]) < 0.8 else (0.0, 1.0, 0.0)
+        tangent = _cross(gravity, axis)
+    tangent = _unit(tangent)
+    return _unit(tuple(math.cos(angle * fraction) * a + math.sin(angle * fraction) * b
+                       for a, b in zip(gravity, tangent)))
+
+
 class UpwardJumpDetector:
     MIN_THRESHOLD = 0.10
     MAX_THRESHOLD = 0.80
@@ -25,7 +59,7 @@ class UpwardJumpDetector:
     DOWNWARD_THRESHOLD_G = -0.25
     DOWNWARD_HOLDOFF_SECONDS = 0.12
     TRANSITION_REST_SECONDS = 0.08
-    REFERENCE_REST_SAMPLES = 15
+    REFERENCE_REST_SAMPLES = 30
     SHORT_PULSE_WINDOW = 0.08
     SHORT_PULSE_IMPULSE_SECONDS = 0.04
 
@@ -39,7 +73,8 @@ class UpwardJumpDetector:
         self.reset()
 
     def reset(self, *, preserve_reference=False):
-        reference = ((self._gravity, self._bias, self._rest_g, self._tick)
+        reference = ((self._gravity, self._bias, self._rest_g, self._tick,
+                      self.orientation_recovering)
                      if preserve_reference and getattr(self, "_gravity", None) is not None
                      else None)
         self.state = "settling"
@@ -53,12 +88,17 @@ class UpwardJumpDetector:
         self._reference_rest = deque(maxlen=self.REFERENCE_REST_SAMPLES)
         self._pulse = deque()
         self.event_reason = None
+        self.orientation_recovering = False
+        self.sensor_saturated = False
+        self._reliable_samples = 0
+        self._gyro_clip_time = 0.0
         self._time = self._above_time = 0.0
         self._candidate_at = self._locked_at = 0.0
         self._downward_until = 0.0
         self._released = False
         if reference is not None:
-            self._gravity, self._bias, self._rest_g, self._tick = reference
+            (self._gravity, self._bias, self._rest_g, self._tick,
+             self.orientation_recovering) = reference
             # Keep calibration, but require the old upward force to be released.
             self.state = "waiting"
 
@@ -68,6 +108,61 @@ class UpwardJumpDetector:
         self._above_time = 0.0
         self._released = False
         self._pulse.clear()
+
+    @property
+    def fused_angles(self):
+        if self._gravity is None:
+            return None
+        x, y, z = self._gravity
+        return (math.degrees(math.atan2(y, z)),
+                math.degrees(math.atan2(-x, math.sqrt(y * y + z * z))))
+
+    def _update_orientation(self, accel_g, gyro_dps, dt, magnitude):
+        accel_clipped = any(abs(v) >= 32767 / 16384 for v in accel_g)
+        gyro_clipped = any(abs(v) >= 32767 / 131 for v in gyro_dps)
+        self.sensor_saturated = accel_clipped or gyro_clipped
+        self._gyro_clip_time = self._gyro_clip_time + dt if gyro_clipped else 0.0
+
+        # Bias learning is separate from directional correction. Compare window
+        # halves to avoid learning a slow intentional rotation as a gyro bias.
+        if abs(magnitude - self._rest_g) <= 0.06 and _norm(gyro_dps) < 12.0:
+            self._reference_rest.append((accel_g, gyro_dps))
+        else:
+            self._reference_rest.clear()
+        if len(self._reference_rest) == self.REFERENCE_REST_SAMPLES:
+            samples = list(self._reference_rest)
+            middle = len(samples) // 2
+            stable = all(max(row[0][i] for row in samples) - min(row[0][i] for row in samples) <= 0.06
+                         and max(row[1][i] for row in samples) - min(row[1][i] for row in samples) <= 2.0
+                         and abs(sum(row[0][i] for row in samples[:middle]) / middle -
+                                 sum(row[0][i] for row in samples[middle:]) / middle) <= 0.006
+                         for i in range(3))
+            if stable:
+                self._bias = tuple(sum(row[1][i] for row in samples) / len(samples) for i in range(3))
+
+        gyro = tuple(math.radians(a - b) for a, b in zip(gyro_dps, self._bias))
+        self._gravity = _rotate_gravity(self._gravity, gyro, dt)
+        measured = _unit(accel_g)
+        agreement = sum(a * b for a, b in zip(self._gravity, measured))
+        trust = 0.0 if accel_clipped else max(0.0, 1.0 - abs(magnitude - self._rest_g) / 0.12)
+        if (accel_clipped or self._gyro_clip_time >= 0.06 - 1e-9
+                or (trust > 0.5 and agreement < math.cos(math.radians(45)))):
+            self.orientation_recovering = True
+            self._reliable_samples = 0
+        # Accelerometer feedback runs during normal movement, independently of
+        # our computed vertical force. Large errors recover without exact rest.
+        if trust > 0:
+            tau = 0.10 if self.orientation_recovering else 0.25
+            self._gravity = _towards_direction(self._gravity, measured,
+                                              1.0 - math.exp(-dt * trust / tau))
+        agreement = sum(a * b for a, b in zip(self._gravity, measured))
+        if self.orientation_recovering:
+            if not self.sensor_saturated and trust > 0.5 and agreement > math.cos(math.radians(20)):
+                self._reliable_samples += 1
+                if self._reliable_samples >= 3:
+                    self.orientation_recovering = False
+            else:
+                self._reliable_samples = 0
 
     def update(self, accel_g, gyro_dps, tick_ms):
         """Return one event. Device sample time, not host arrival time, sets dt."""
@@ -106,49 +201,22 @@ class UpwardJumpDetector:
             self.state = "ready"
             return False
 
-        # Assess rest from measured samples, independently of the estimated
-        # gravity. A drifted estimate must not disable its own recovery.
-        if abs(magnitude - self._rest_g) <= 0.06 and _norm(gyro_dps) < 12.0:
-            self._reference_rest.append((accel_g, gyro_dps))
-        else:
-            self._reference_rest.clear()
-        if len(self._reference_rest) == self.REFERENCE_REST_SAMPLES:
-            stable_accel = all(max(row[0][axis] for row in self._reference_rest) -
-                               min(row[0][axis] for row in self._reference_rest) <= 0.04
-                               for axis in range(3))
-            stable_gyro = all(max(row[1][axis] for row in self._reference_rest) -
-                              min(row[1][axis] for row in self._reference_rest) <= 2.0
-                              for axis in range(3))
-            if stable_accel and stable_gyro:
-                self._gravity = _unit(tuple(sum(row[0][i] for row in self._reference_rest) /
-                                            self.REFERENCE_REST_SAMPLES for i in range(3)))
-                self._bias = tuple(sum(row[1][i] for row in self._reference_rest) /
-                                   self.REFERENCE_REST_SAMPLES for i in range(3))
-
-        gyro = tuple(a - b for a, b in zip(gyro_dps, self._bias))
-        wx, wy, wz = (math.radians(x) for x in gyro)
-        gx, gy, gz = self._gravity
-        # Gravity is fixed in world space; its body-frame derivative is g x w.
-        self._gravity = _unit((gx + (gy * wz - gz * wy) * dt,
-                               gy + (gz * wx - gx * wz) * dt,
-                               gz + (gx * wy - gy * wx) * dt))
+        self._update_orientation(accel_g, gyro_dps, dt, magnitude)
         projected = sum(a * g for a, g in zip(accel_g, self._gravity))
         self.vertical_g = projected - self._rest_g
         self.horizontal_g = _norm(tuple(a - projected * g
                                         for a, g in zip(accel_g, self._gravity)))
-        gyro_speed = _norm(gyro)
         if self.state == "ready" and self.vertical_g > 0.08:
             self.peak_g = self.vertical_g
         elif self.state in {"lifting", "locked"}:
             self.peak_g = max(self.peak_g, self.vertical_g)
-        still = (abs(self.vertical_g) < 0.02 and self.horizontal_g < 0.08
-                 and gyro_speed < 20.0)
-        # Correct slow attitude drift only under near-rest conditions.
-        if still:
-            measured = _unit(accel_g)
-            alpha = 1.0 - math.exp(-dt / 1.0)
-            self._gravity = _unit(tuple((1 - alpha) * g + alpha * a
-                                        for g, a in zip(self._gravity, measured)))
+        if self.orientation_recovering:
+            self._pulse.clear()
+            self._above_time = 0.0
+            self._downward_until = self._time
+            if self.state not in {'waiting', 'locked'}:
+                self.state = 'ready'
+            return False
 
         if self.vertical_g <= self.threshold_g * 0.5:
             self._released = True

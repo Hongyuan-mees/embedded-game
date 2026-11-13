@@ -1,0 +1,70 @@
+{
+  "source": "last_run_analysis_20261113_4de8fe39.jsonl",
+  "intention_labels_available": false,
+  "versions": {
+    "before": [
+      {
+        "host_range": [
+          21.3,
+          78.5
+        ],
+        "events": 10,
+        "quasi_quiet_vertical_median_g": -0.0144,
+        "downward_holdoff_fraction": 0.0347,
+        "recovering_fraction": 0.0
+      },
+      {
+        "host_range": [
+          90,
+          118.5
+        ],
+        "events": 1,
+        "quasi_quiet_vertical_median_g": -0.584,
+        "downward_holdoff_fraction": 0.8492,
+        "recovering_fraction": 0.0
+      },
+      {
+        "host_range": [
+          120,
+          143
+        ],
+        "events": 0,
+        "quasi_quiet_vertical_median_g": -0.848,
+        "downward_holdoff_fraction": 1.0,
+        "recovering_fraction": 0.0
+      }
+    ],
+    "after": [
+      {
+        "host_range": [
+          21.3,
+          78.5
+        ],
+        "events": 10,
+        "quasi_quiet_vertical_median_g": 0.0018,
+        "downward_holdoff_fraction": 0.02,
+        "recovering_fraction": 0.0301
+      },
+      {
+        "host_range": [
+          90,
+          118.5
+        ],
+        "events": 1,
+        "quasi_quiet_vertical_median_g": -0.0005,
+        "downward_holdoff_fraction": 0.0099,
+        "recovering_fraction": 0.1036
+      },
+      {
+        "host_range": [
+          120,
+          143
+        ],
+        "events": 7,
+        "quasi_quiet_vertical_median_g": -0.0011,
+        "downward_holdoff_fraction": 0.0925,
+        "recovering_fraction": 0.2962
+      }
+    ]
+  }
+}

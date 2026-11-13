@@ -17,6 +17,7 @@ from MotionGolf_Stage1_v4.controller import ControllerConfig, SerialController
 from MotionGolf_Stage1_v4.controller_panel import ControllerPanel
 from MotionGolf_Stage1_v4.tests.test_serial_controller import FakeSerial, FakeClock
 from MotionGolf_Stage1_v4.tests.test_upward_jump import v2_frame
+from MotionGolf_Stage1_v4.tests.physical_imu import PhysicalImuTrace
 import MotionGolf_Stage1_v4.settings as settings
 
 
@@ -24,6 +25,7 @@ class GameIntegrationTests(unittest.TestCase):
     def run_game(self, hardware, event_plan, frames=60, profile=None):
         clock = FakeClock()
         streams = []
+        physical_imu = PhysicalImuTrace()
 
         def factory(**options):
             stream = FakeSerial(**options)
@@ -46,7 +48,7 @@ class GameIntegrationTests(unittest.TestCase):
                                  "tests": namespace["controller_panel"].jump_tests})
             if streams and streams[-1].is_open:
                 packet = profile(counter, int(clock.now * 1000)) if profile else v2_frame(int(clock.now * 1000))
-                streams[-1].data.extend(packet)
+                streams[-1].data.extend(physical_imu.packet(packet))
             result = event_plan(counter)
             if counter >= frames:
                 result.append(pygame.event.Event(pygame.QUIT))

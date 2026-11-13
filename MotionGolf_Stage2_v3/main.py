@@ -700,7 +700,8 @@ while running:
         if not controller_panel.open:
             if focused and controller_mode=='STM32' and controller_panel.ready:
                 runner.set_motion_state(stm32_controller.roll, jump_event=stm32_controller.jump,
-                                        pitch=stm32_controller.pitch)
+                                        pitch=stm32_controller.pitch,
+                                        jump_preparing=stm32_controller.detector.state == 'lifting')
             runner.update(dt)
         runner.draw(screen)
         buttons=[]

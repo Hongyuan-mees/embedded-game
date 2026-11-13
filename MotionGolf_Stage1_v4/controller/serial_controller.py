@@ -315,7 +315,7 @@ class SerialController:
                                              packet.tick_ms)
         if self.calibrating:
             moving = packet.jump if self.config.jump_mode == "legacy" else (
-                version == 2 and (abs(math.sqrt(sum((x / 16384.0) ** 2
+                version == 2 and (self.detector.orientation_recovering or abs(math.sqrt(sum((x / 16384.0) ** 2
                                                     for x in packet.accel_raw)) - 1.0) > 0.08 or
                                   abs(self.detector.vertical_g) > 0.08 or
                                   self.detector.horizontal_g > 0.08 or
@@ -323,16 +323,28 @@ class SerialController:
             if moving:
                 self._samples.clear()
             else:
-                self._samples.append((packet.roll, packet.pitch))
+                self._samples.append(self._input_angles())
                 self._finish_calibration()
         else:
             self.jump = self.jump or event
         if not self.calibrating:
             self._map_angles()
 
+    def _input_angles(self):
+        if self.protocol_version == 2 and self.config.jump_mode == 'upward':
+            angles = self.detector.fused_angles
+            if angles is not None:
+                return angles
+        return self.raw_roll, self.raw_pitch
+
     def _map_angles(self):
-        roll = _angle_difference(self.raw_roll, self._roll_zero)
-        pitch = self.raw_pitch - self._pitch_zero
+        if (self.protocol_version == 2 and self.config.jump_mode == 'upward'
+                and (self.detector.fused_angles is None or self.detector.orientation_recovering)):
+            self.roll = self.pitch = 0.0
+            return
+        source_roll, source_pitch = self._input_angles()
+        roll = _angle_difference(source_roll, self._roll_zero)
+        pitch = source_pitch - self._pitch_zero
         if self.config.swap_axes:
             roll, pitch = pitch, roll
         self.roll = self._normalize(-roll if self.config.invert_roll else roll)
@@ -357,7 +369,7 @@ class SerialController:
         self._previous_jump = None
         self.roll = self.pitch = 0.0
         self.jump = False
-        self.detector.reset()
+        self.detector.reset(preserve_reference=True)
         return True
 
     def _finish_calibration(self):

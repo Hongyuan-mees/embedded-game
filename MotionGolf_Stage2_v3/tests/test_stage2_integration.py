@@ -16,6 +16,7 @@ import pygame
 from MotionGolf_Stage2_v3.controller import STM32SerialController
 from MotionGolf_Stage1_v4.tests.test_serial_controller import FakeClock, FakeSerial
 from MotionGolf_Stage1_v4.tests.test_upward_jump import v2_frame
+from MotionGolf_Stage1_v4.tests.physical_imu import PhysicalImuTrace
 import MotionGolf_Stage1_v4.settings as player_settings
 
 
@@ -38,6 +39,7 @@ class Stage2IntegrationTests(unittest.TestCase):
         streams = []
         observations = []
         deferred_actions = []
+        physical_imu = PhysicalImuTrace()
         frame = 0
 
         def factory(**options):
@@ -68,7 +70,7 @@ class Stage2IntegrationTests(unittest.TestCase):
             })
             if streams and streams[-1].is_open:
                 packet = profile(frame, frame * 20) if profile else v2_frame(frame * 20)
-                streams[-1].data.extend(packet)
+                streams[-1].data.extend(physical_imu.packet(packet))
             planned_actions = plan(frame, game)
             result = list(planned_actions)
             if enter_golf and frame == 2 and game['state'] == game['GAME_SELECT']:
@@ -132,9 +134,9 @@ class Stage2IntegrationTests(unittest.TestCase):
         _, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=200)
         mode_at = {r['frame']: r['runner_mode'] for r in seen}
         self.assertEqual(mode_at[50], 'running')  # Rear tilt needs confirmation.
-        self.assertEqual(mode_at[55], 'sliding')
+        self.assertEqual(mode_at[58], 'sliding')
         self.assertEqual(mode_at[100], 'running')
-        self.assertEqual(mode_at[130], 'sliding')
+        self.assertEqual(mode_at[133], 'sliding')
         self.assertEqual(mode_at[185], 'running')
 
     def test_runner_held_tilt_repeats_steps_then_center_keeps_lane(self):
@@ -151,11 +153,12 @@ class Stage2IntegrationTests(unittest.TestCase):
         self.assertEqual(lane_at[55], 0)
         self.assertEqual(lane_at[65], 1)  # First right command steps once.
         self.assertEqual(lane_at[80], 1)  # Initial hold delay has not elapsed.
-        self.assertEqual(lane_at[99], 1)  # Still waiting just before 0.80 seconds.
-        self.assertEqual(lane_at[101], 2)  # Holding continues after 0.80 seconds.
+        self.assertEqual(lane_at[89], 1)  # Still waiting just before 0.60 seconds.
+        self.assertEqual(lane_at[91], 1)  # Rate-limited tilt crossed the gate at frame 62.
+        self.assertEqual(lane_at[93], 2)  # Repeat is 0.60s after that crossing.
         self.assertEqual(lane_at[115], 1)
-        self.assertEqual(lane_at[148], 1)
-        self.assertEqual(lane_at[152], 0)
+        self.assertEqual(lane_at[138], 1)
+        self.assertEqual(lane_at[142], 0)
         self.assertEqual(lane_at[165], 0)  # Neutral preserves the lane.
 
     def test_runner_lift_cancels_pending_rear_slide(self):
@@ -195,11 +198,39 @@ class Stage2IntegrationTests(unittest.TestCase):
 
         game, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=125)
         mode_at = {r['frame']: r['runner_mode'] for r in seen}
-        self.assertEqual(mode_at[55], 'sliding')
+        self.assertEqual(mode_at[58], 'sliding')
         self.assertEqual(mode_at[63], 'jumping')
         self.assertGreater(next(r for r in seen if r['frame'] == 63)['runner_height'], 0)
         self.assertFalse(any(r['runner_mode'] == 'sliding' for r in seen if r['frame'] >= 63))
         self.assertEqual(game['runner'].slide_timer, 0)
+
+    def test_runner_lift_and_airborne_wobble_use_higher_lane_threshold(self):
+        def plan(n, game):
+            return {2: [self.click((880, 300)), self.key(pygame.K_F4)],
+                    40: [self.key(pygame.K_RETURN)]}.get(n, [])
+
+        def profile(n, tick):
+            return v2_frame(tick, roll=14 if 60 <= n < 115 else 0,
+                            accel=(0, 0, 1.45 if 60 <= n <= 62 else 1))
+
+        _, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=130)
+        self.assertGreater(max(r['runner_height'] for r in seen), 0)
+        self.assertTrue(all(r['runner_lane'] == 1 for r in seen if 60 <= r['frame'] <= 98))
+        self.assertEqual(next(r for r in seen if r['frame'] == 112)['runner_lane'], 2)
+
+    def test_runner_deliberate_stronger_tilt_can_still_change_lane_in_air(self):
+        def plan(n, game):
+            return {2: [self.click((880, 300)), self.key(pygame.K_F4)],
+                    40: [self.key(pygame.K_RETURN)]}.get(n, [])
+
+        def profile(n, tick):
+            return v2_frame(tick, roll=-20 if 70 <= n < 90 else 0,
+                            accel=(0, 0, 1.45 if 60 <= n <= 62 else 1))
+
+        _, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=115)
+        airborne = next(r for r in seen if r['frame'] == 75)
+        self.assertGreater(airborne['runner_height'], 0)
+        self.assertEqual(airborne['runner_lane'], 0)
 
     def test_runner_short_peak_just_before_landing_is_buffered_into_next_jump(self):
         def plan(n, game):
@@ -293,13 +324,13 @@ class Stage2IntegrationTests(unittest.TestCase):
 
         def profile(n, tick):
             # Cross the 0.60 trigger, then hold just below it (above 0.45).
-            tilt = -18 if n == 45 or n == 100 else -16 if 46 <= n < 90 or 101 <= n < 135 else -10 if 90 <= n < 100 else 0
+            tilt = -18 if 45 <= n < 50 or 100 <= n < 105 else -16 if 50 <= n < 90 or 105 <= n < 135 else -10 if 90 <= n < 100 else 0
             return v2_frame(tick, pitch=tilt)
 
         _, seen = self.run_game(plan, profile=profile, enter_golf=False, frames=145)
         mode_at = {r['frame']: r['runner_mode'] for r in seen}
-        self.assertEqual(mode_at[55], 'sliding')
-        self.assertEqual(mode_at[88], 'running')  # Holding does not repeat.
+        self.assertEqual(mode_at[58], 'sliding')
+        self.assertEqual(mode_at[96], 'running')  # Holding does not repeat after the full slide.
         self.assertEqual(mode_at[110], 'sliding')  # Partial return rearms.
 
     def test_runner_held_tilt_is_not_replayed_after_pause_or_keyboard_input(self):

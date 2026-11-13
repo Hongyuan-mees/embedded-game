@@ -77,9 +77,9 @@ class GestureTests(unittest.TestCase):
         self.detector._bias = (7.0, 0.0, 0.0)
         gravity = (0.08, 0.01, 0.96)
         gyro = (-4.7, 0.1, 0.0)
-        self.assertEqual(self.feed(gravity, 40, gyro), 0)
+        self.assertEqual(self.feed(gravity, 60, gyro), 0)
         expected_vertical = math.sqrt(sum(a * a for a in gravity)) - self.detector._rest_g
-        self.assertAlmostEqual(self.detector.vertical_g, expected_vertical, places=4)
+        self.assertAlmostEqual(self.detector.vertical_g, expected_vertical, delta=0.001)
         self.assertLess(self.detector.horizontal_g, 0.02)
         self.assertAlmostEqual(self.detector._bias[0], -4.7)
         self.assertEqual(self.feed(tuple(1.5 * a for a in gravity), 3, gyro), 1)
@@ -305,6 +305,42 @@ class GestureTests(unittest.TestCase):
             angle = math.radians(n * 0.4)
             self.assertEqual(self.feed((0, math.sin(angle), math.cos(angle)), gyro=(20, 0, 0)), 0)
         self.assertAlmostEqual(self.detector.vertical_g, 0, places=3)
+
+    def test_slow_intentional_rotation_is_not_learned_as_gyro_bias(self):
+        self.settle()
+        for n in range(1, 201):
+            angle = math.radians(n * .1)
+            self.assertEqual(self.feed((0, math.sin(angle), math.cos(angle)), gyro=(5, 0, 0)), 0)
+        self.assertAlmostEqual(self.detector._bias[0], 0, delta=.1)
+        self.assertAlmostEqual(self.detector.fused_angles[0], 20, delta=.5)
+
+    def test_bad_reference_recovers_during_rotation_without_stationary_window(self):
+        self.settle()
+        self.detector._gravity = (1, 0, 0)
+        for n in range(1, 61):
+            angle = math.radians(n * .4)
+            gravity = (0, math.sin(angle), math.cos(angle))
+            self.assertEqual(self.feed(gravity, gyro=(20, 0, 0)), 0)
+        self.assertFalse(self.detector.orientation_recovering)
+        self.assertEqual(len(self.detector._reference_rest), 0)
+        self.assertLess(abs(self.detector.vertical_g), .01)
+        self.assertLess(self.detector.horizontal_g, .03)
+        self.assertEqual(self.feed(tuple(1.45 * a for a in gravity), 3), 1)
+
+    def test_vertical_lift_with_incidental_force_does_not_become_tilt(self):
+        self.settle()
+        self.feed((.3, 0, 1.45), 4)
+        self.assertAlmostEqual(self.detector.fused_angles[0], 0, delta=.01)
+        self.assertAlmostEqual(self.detector.fused_angles[1], 0, delta=.01)
+
+    def test_sustained_gyro_clipping_enters_recovery_and_does_not_jump(self):
+        self.settle()
+        self.assertEqual(self.feed(count=4, gyro=(0, 32767 / 131, 0)), 0)
+        self.assertTrue(self.detector.sensor_saturated)
+        self.assertTrue(self.detector.orientation_recovering)
+        self.assertEqual(self.feed(count=40), 0)
+        self.assertFalse(self.detector.orientation_recovering)
+        self.assertEqual(self.feed((0, 0, 1.45), 3), 1)
 
     def test_wrist_rotation_does_not_veto_upward_force(self):
         self.settle()

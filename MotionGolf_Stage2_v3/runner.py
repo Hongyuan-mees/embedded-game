@@ -33,8 +33,9 @@ class RunnerGame:
     LANE_WIDTH = 244.0
     RUN_SPEED = 20.0
     LANE_TILT_THRESHOLD = 0.40
+    AIR_LANE_TILT_THRESHOLD = 0.55
     LANE_CENTER_THRESHOLD = 0.10
-    LANE_REPEAT_DELAY = 0.80
+    LANE_REPEAT_DELAY = 0.60
     LANE_REPEAT_INTERVAL = 0.35
     SLIDE_TILT_THRESHOLD = 0.60
     SLIDE_RELEASE_THRESHOLD = 0.30
@@ -98,6 +99,7 @@ class RunnerGame:
         self._lane_armed = False
         self._lane_direction = 0
         self._lane_repeat_time = 0.0
+        self._lane_threshold = self.LANE_TILT_THRESHOLD
         self._slide_armed = False
         self._slide_confirm_time = None
         self._jump_buffer_time = 0.0
@@ -158,17 +160,21 @@ class RunnerGame:
         slide_event: bool = False,
         *,
         pitch: float = 0.0,
+        jump_preparing: bool = False,
     ) -> None:
         """Normalized tilt: lane steps/repeat, and delayed rear-tilt slides."""
         self.sensor_roll = roll
         if self.status != "playing":
             return
 
+        lift_active = self.mode == "jumping" or jump_event or jump_preparing or self._jump_buffer_time > 0
+        self._lane_threshold = self.AIR_LANE_TILT_THRESHOLD if lift_active else self.LANE_TILT_THRESHOLD
+
         if abs(roll) <= self.LANE_CENTER_THRESHOLD:
             self._lane_armed = True
             self._lane_direction = 0
             self._lane_repeat_time = 0.0
-        elif abs(roll) >= self.LANE_TILT_THRESHOLD:
+        elif abs(roll) >= self._lane_threshold:
             direction = -1 if roll < 0 else 1
             if self._lane_armed or (self._lane_direction and direction != self._lane_direction):
                 self._lane_direction = direction
@@ -253,7 +259,8 @@ class RunnerGame:
             if self._jump_buffer_time > 1e-9:
                 self.request_jump()
 
-        if self._lane_direction and abs(self.sensor_roll) >= self.LANE_TILT_THRESHOLD:
+        lane_threshold = self.AIR_LANE_TILT_THRESHOLD if self.mode == "jumping" else self._lane_threshold
+        if self._lane_direction and abs(self.sensor_roll) >= lane_threshold:
             self._lane_repeat_time -= dt
             if self._lane_repeat_time <= 1e-9:
                 self.move_lane(self._lane_direction)

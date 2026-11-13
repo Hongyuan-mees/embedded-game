@@ -1,0 +1,1054 @@
+{
+  "source": "live_game_gesture_4de8fe39.jsonl",
+  "frozen_snapshot": "last_run_analysis_20261113_4de8fe39.jsonl",
+  "snapshot_sha256": "27521c36077356956052e626cb75fbe842e4589e576a08cb46793a1f78a7e692",
+  "snapshot_duration_s": 256.7949,
+  "sample_count": 12816,
+  "active_sample_count": 5391,
+  "tick_deltas_ms": {
+    "20": 12815
+  },
+  "ui_errors": [],
+  "runs": [
+    {
+      "host_range_s": [
+        21.3,
+        78.5
+      ],
+      "samples": 2857,
+      "detected_jumps": 10,
+      "detector_states": {
+        "waiting": 3,
+        "ready": 2359,
+        "lifting": 145,
+        "locked": 350
+      },
+      "downward_holdoff_fraction": 0.0347,
+      "quasi_quiet_samples": 1466,
+      "quasi_quiet_direction_angle_median_deg": 11.36,
+      "quasi_quiet_vertical_median_g": -0.0144,
+      "accel_rail_samples": 0,
+      "gyro_rail_samples": 44,
+      "mapped_pitch_saturated_fraction": 0.1187
+    },
+    {
+      "host_range_s": [
+        90,
+        118.5
+      ],
+      "samples": 1419,
+      "detected_jumps": 1,
+      "detector_states": {
+        "waiting": 3,
+        "ready": 1376,
+        "lifting": 5,
+        "locked": 35
+      },
+      "downward_holdoff_fraction": 0.8492,
+      "quasi_quiet_samples": 707,
+      "quasi_quiet_direction_angle_median_deg": 66.95,
+      "quasi_quiet_vertical_median_g": -0.584,
+      "accel_rail_samples": 0,
+      "gyro_rail_samples": 69,
+      "mapped_pitch_saturated_fraction": 0.2037
+    },
+    {
+      "host_range_s": [
+        120,
+        143
+      ],
+      "samples": 1114,
+      "detected_jumps": 0,
+      "detector_states": {
+        "waiting": 3,
+        "ready": 1111
+      },
+      "downward_holdoff_fraction": 1.0,
+      "quasi_quiet_samples": 226,
+      "quasi_quiet_direction_angle_median_deg": 83.43,
+      "quasi_quiet_vertical_median_g": -0.848,
+      "accel_rail_samples": 68,
+      "gyro_rail_samples": 64,
+      "mapped_pitch_saturated_fraction": 0.0637
+    }
+  ],
+  "runner_jump_requests": {
+    "accepted": 11,
+    "rejected": 0
+  },
+  "representative_samples": [
+    {
+      "host_s": 98.9677,
+      "accel_magnitude_g": 0.9584,
+      "estimated_vertical_g": -0.4782,
+      "direction_angle_deg": 59.95,
+      "accel_g": [
+        -0.05126953125,
+        0.001220703125,
+        0.95703125
+      ],
+      "estimated_gravity": [
+        0.8376024154905943,
+        -0.0005186127353000557,
+        0.5462800789019793
+      ],
+      "gyro_dps": [
+        -5.900763358778626,
+        -1.534351145038168,
+        -1.0305343511450382
+      ],
+      "bias_dps": [
+        -4.710941475826972,
+        0.8926208651399492,
+        0.20865139949109415
+      ],
+      "reference_rest_samples": 15
+    },
+    {
+      "host_s": 116.9906,
+      "accel_magnitude_g": 0.9481,
+      "estimated_vertical_g": -0.8431,
+      "direction_angle_deg": 83.03,
+      "accel_g": [
+        0.0205078125,
+        0.0146484375,
+        0.94775390625
+      ],
+      "estimated_gravity": [
+        0.9949127404430735,
+        -0.012375622670169477,
+        0.09997741178675704
+      ],
+      "gyro_dps": [
+        -4.854961832061068,
+        1.3969465648854962,
+        0.6030534351145038
+      ],
+      "bias_dps": [
+        -4.710941475826972,
+        0.8926208651399492,
+        0.20865139949109415
+      ],
+      "reference_rest_samples": 15
+    },
+    {
+      "host_s": 126.9873,
+      "accel_magnitude_g": 0.9549,
+      "estimated_vertical_g": -0.8535,
+      "direction_angle_deg": 83.71,
+      "accel_g": [
+        0.15283203125,
+        0.02197265625,
+        0.9423828125
+      ],
+      "estimated_gravity": [
+        0.995853327087615,
+        0.07446647886729116,
+        -0.05225796067236775
+      ],
+      "gyro_dps": [
+        -4.961832061068702,
+        2.381679389312977,
+        -0.10687022900763359
+      ],
+      "bias_dps": [
+        -4.710941475826972,
+        0.8926208651399492,
+        0.20865139949109415
+      ],
+      "reference_rest_samples": 15
+    },
+    {
+      "host_s": 136.9884,
+      "accel_magnitude_g": 0.9518,
+      "estimated_vertical_g": -1.3785,
+      "direction_angle_deg": 116.22,
+      "accel_g": [
+        0.0546875,
+        0.030029296875,
+        0.94970703125
+      ],
+      "estimated_gravity": [
+        0.8658075213564896,
+        -0.10477027494889886,
+        -0.489285729865141
+      ],
+      "gyro_dps": [
+        -3.053435114503817,
+        2.9618320610687023,
+        0.8702290076335878
+      ],
+      "bias_dps": [
+        -4.710941475826972,
+        0.8926208651399492,
+        0.20865139949109415
+      ],
+      "reference_rest_samples": 3
+    },
+    {
+      "host_s": 149.9939,
+      "accel_magnitude_g": 0.921,
+      "estimated_vertical_g": -0.0371,
+      "direction_angle_deg": 0.42,
+      "accel_g": [
+        0.052490234375,
+        0.007080078125,
+        0.91943359375
+      ],
+      "estimated_gravity": [
+        0.06406265299299498,
+        0.009752612290012659,
+        0.9978982227887871
+      ],
+      "gyro_dps": [
+        -4.32824427480916,
+        -0.2824427480916031,
+        0.1984732824427481
+      ],
+      "bias_dps": [
+        -4.7262086513994905,
+        0.11348600508905853,
+        0.1089058524173028
+      ],
+      "reference_rest_samples": 15
+    }
+  ],
+  "observed_actions": {
+    "lane_changes": 38,
+    "slide_starts": 12,
+    "jump_starts": 11
+  },
+  "action_changes": [
+    {
+      "host_s": 22.5016,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -16.2,
+      "raw_pitch_deg": -16.8,
+      "mapped_pitch": 0.12171428571428568,
+      "estimated_vertical_g": -0.07659577028029885
+    },
+    {
+      "host_s": 23.0736,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": -6.8,
+      "raw_pitch_deg": -17.4,
+      "mapped_pitch": 0.24076190476190473,
+      "estimated_vertical_g": 0.26312626777058623
+    },
+    {
+      "host_s": 23.7184,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 13.5,
+      "raw_pitch_deg": -20.9,
+      "mapped_pitch": 0.34552380952380946,
+      "estimated_vertical_g": 0.003280244146074529
+    },
+    {
+      "host_s": 23.8508,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": 12.3,
+      "raw_pitch_deg": -21.0,
+      "mapped_pitch": 0.35028571428571426,
+      "estimated_vertical_g": 0.03432735030186085
+    },
+    {
+      "host_s": 24.332,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": 9.5,
+      "raw_pitch_deg": -26.5,
+      "mapped_pitch": 0.5693333333333334,
+      "estimated_vertical_g": -0.2802822551278902
+    },
+    {
+      "host_s": 24.9923,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 2,
+      "raw_roll_deg": 24.5,
+      "raw_pitch_deg": -28.9,
+      "mapped_pitch": 0.7550476190476191,
+      "estimated_vertical_g": 0.010487809869860643
+    },
+    {
+      "host_s": 25.0917,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": 26.2,
+      "raw_pitch_deg": -30.1,
+      "mapped_pitch": 0.7836190476190478,
+      "estimated_vertical_g": 0.05562375693113564
+    },
+    {
+      "host_s": 25.7684,
+      "field": "runner_lane",
+      "before": 2,
+      "after": 1,
+      "raw_roll_deg": -17.3,
+      "raw_pitch_deg": -27.3,
+      "mapped_pitch": 0.6360000000000001,
+      "estimated_vertical_g": -0.10645631286841406
+    },
+    {
+      "host_s": 26.3589,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -32.3,
+      "raw_pitch_deg": -23.3,
+      "mapped_pitch": 0.45028571428571434,
+      "estimated_vertical_g": -0.07011244142214579
+    },
+    {
+      "host_s": 27.2604,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": -10.1,
+      "raw_pitch_deg": -17.0,
+      "mapped_pitch": 0.2026666666666666,
+      "estimated_vertical_g": 0.0859010615017487
+    },
+    {
+      "host_s": 28.0524,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": -0.8,
+      "raw_pitch_deg": -17.3,
+      "mapped_pitch": 0.16933333333333328,
+      "estimated_vertical_g": -0.013323692411868482
+    },
+    {
+      "host_s": 28.9282,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 10.9,
+      "raw_pitch_deg": -15.1,
+      "mapped_pitch": 0.06933333333333332,
+      "estimated_vertical_g": -0.027745189414449034
+    },
+    {
+      "host_s": 39.706,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -15.8,
+      "raw_pitch_deg": -20.8,
+      "mapped_pitch": 0.3312380952380953,
+      "estimated_vertical_g": 0.014713299270121438
+    },
+    {
+      "host_s": 42.0053,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": -8.4,
+      "raw_pitch_deg": -21.4,
+      "mapped_pitch": 0.3550476190476191,
+      "estimated_vertical_g": 0.10179322070800445
+    },
+    {
+      "host_s": 42.3016,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 14.1,
+      "raw_pitch_deg": -26.9,
+      "mapped_pitch": 0.6169523809523811,
+      "estimated_vertical_g": 0.027807355382082122
+    },
+    {
+      "host_s": 42.7806,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": 27.0,
+      "raw_pitch_deg": -29.8,
+      "mapped_pitch": 0.7264761904761905,
+      "estimated_vertical_g": 0.26095786511702
+    },
+    {
+      "host_s": 42.8952,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 2,
+      "raw_roll_deg": 30.9,
+      "raw_pitch_deg": -35.4,
+      "mapped_pitch": 0.9931428571428572,
+      "estimated_vertical_g": -0.029416025993562078
+    },
+    {
+      "host_s": 43.4044,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": 27.2,
+      "raw_pitch_deg": -30.7,
+      "mapped_pitch": 0.9026666666666668,
+      "estimated_vertical_g": 0.9814836333903575
+    },
+    {
+      "host_s": 44.1876,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": -17.8,
+      "raw_pitch_deg": -29.3,
+      "mapped_pitch": 0.7169523809523808,
+      "estimated_vertical_g": -0.08869452141297107
+    },
+    {
+      "host_s": 44.2037,
+      "field": "runner_lane",
+      "before": 2,
+      "after": 1,
+      "raw_roll_deg": -20.0,
+      "raw_pitch_deg": -29.5,
+      "mapped_pitch": 0.7455238095238095,
+      "estimated_vertical_g": -0.053958311290732364
+    },
+    {
+      "host_s": 44.7996,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -50.7,
+      "raw_pitch_deg": -27.1,
+      "mapped_pitch": 0.6407619047619049,
+      "estimated_vertical_g": -0.01190871621170142
+    },
+    {
+      "host_s": 45.4556,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": -19.8,
+      "raw_pitch_deg": -11.8,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": 0.3069711818738442
+    },
+    {
+      "host_s": 46.2284,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": 10.5,
+      "raw_pitch_deg": -29.5,
+      "mapped_pitch": 0.7455238095238095,
+      "estimated_vertical_g": 0.02347441228763425
+    },
+    {
+      "host_s": 46.2444,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 11.6,
+      "raw_pitch_deg": -29.7,
+      "mapped_pitch": 0.7550476190476191,
+      "estimated_vertical_g": 0.1137391795143482
+    },
+    {
+      "host_s": 46.3265,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": 15.9,
+      "raw_pitch_deg": -30.2,
+      "mapped_pitch": 0.7836190476190478,
+      "estimated_vertical_g": -0.0068438197685146696
+    },
+    {
+      "host_s": 46.8868,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 2,
+      "raw_roll_deg": 14.3,
+      "raw_pitch_deg": -26.8,
+      "mapped_pitch": 0.6264761904761904,
+      "estimated_vertical_g": 0.017596853866191586
+    },
+    {
+      "host_s": 47.0346,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": 8.4,
+      "raw_pitch_deg": -25.4,
+      "mapped_pitch": 0.5598095238095238,
+      "estimated_vertical_g": 0.04969288750716483
+    },
+    {
+      "host_s": 47.4459,
+      "field": "runner_lane",
+      "before": 2,
+      "after": 1,
+      "raw_roll_deg": -15.9,
+      "raw_pitch_deg": -53.6,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": 0.06734855240108517
+    },
+    {
+      "host_s": 48.4664,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -24.3,
+      "raw_pitch_deg": -66.0,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.02898371571740843
+    },
+    {
+      "host_s": 49.1578,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 15.7,
+      "raw_pitch_deg": -41.4,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.16522810785571285
+    },
+    {
+      "host_s": 49.1578,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": 15.7,
+      "raw_pitch_deg": -41.4,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.16522810785571285
+    },
+    {
+      "host_s": 49.8634,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": 2.5,
+      "raw_pitch_deg": -21.7,
+      "mapped_pitch": 0.41695238095238085,
+      "estimated_vertical_g": -0.001983035934552846
+    },
+    {
+      "host_s": 50.6001,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -17.6,
+      "raw_pitch_deg": -15.4,
+      "mapped_pitch": 0.05980952380952382,
+      "estimated_vertical_g": -0.14304121133704528
+    },
+    {
+      "host_s": 51.462,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": -5.6,
+      "raw_pitch_deg": -6.6,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": 0.642701353708698
+    },
+    {
+      "host_s": 52.2362,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": 2.0,
+      "raw_pitch_deg": -24.2,
+      "mapped_pitch": 0.5121904761904761,
+      "estimated_vertical_g": -0.03102752617615845
+    },
+    {
+      "host_s": 52.3333,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": 2.8,
+      "raw_pitch_deg": -23.4,
+      "mapped_pitch": 0.4740952380952382,
+      "estimated_vertical_g": -0.014555021979933302
+    },
+    {
+      "host_s": 53.0403,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": 3.9,
+      "raw_pitch_deg": -17.1,
+      "mapped_pitch": 0.16933333333333328,
+      "estimated_vertical_g": -0.04145578941817407
+    },
+    {
+      "host_s": 54.5733,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 10.8,
+      "raw_pitch_deg": -15.8,
+      "mapped_pitch": 0.08838095238095238,
+      "estimated_vertical_g": -0.07110173506218909
+    },
+    {
+      "host_s": 60.6586,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 2,
+      "raw_roll_deg": 12.0,
+      "raw_pitch_deg": -12.7,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": 0.056526464891900274
+    },
+    {
+      "host_s": 61.6857,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": 3.4,
+      "raw_pitch_deg": -9.2,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": 0.24294412002321286
+    },
+    {
+      "host_s": 62.4516,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": -1.9,
+      "raw_pitch_deg": -23.9,
+      "mapped_pitch": 0.4883809523809523,
+      "estimated_vertical_g": -0.028268706531255683
+    },
+    {
+      "host_s": 64.0026,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": -3.8,
+      "raw_pitch_deg": -43.0,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.010216008808389354
+    },
+    {
+      "host_s": 64.7133,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": -5.1,
+      "raw_pitch_deg": -56.0,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.04374382547201028
+    },
+    {
+      "host_s": 68.3056,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": -6.5,
+      "raw_pitch_deg": -42.9,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.004809376322450931
+    },
+    {
+      "host_s": 68.9945,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": -5.4,
+      "raw_pitch_deg": -37.5,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.015149102583694396
+    },
+    {
+      "host_s": 70.0649,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": 0.8,
+      "raw_pitch_deg": -1.9,
+      "mapped_pitch": -0.15447619047619046,
+      "estimated_vertical_g": 0.6118216530695261
+    },
+    {
+      "host_s": 70.8235,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": -0.8,
+      "raw_pitch_deg": -14.1,
+      "mapped_pitch": 0.040761904761904756,
+      "estimated_vertical_g": 0.015305736076427712
+    },
+    {
+      "host_s": 72.2145,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": 0.5,
+      "raw_pitch_deg": -7.9,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": 0.12463710401283967
+    },
+    {
+      "host_s": 73.0065,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": -1.5,
+      "raw_pitch_deg": -22.1,
+      "mapped_pitch": 0.43600000000000005,
+      "estimated_vertical_g": -0.048675713951402466
+    },
+    {
+      "host_s": 76.1539,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": -5.0,
+      "raw_pitch_deg": -41.7,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.008169805248719242
+    },
+    {
+      "host_s": 76.8613,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": -8.2,
+      "raw_pitch_deg": -57.6,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": 0.04317831210654133
+    },
+    {
+      "host_s": 91.3693,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "jumping",
+      "raw_roll_deg": -5.9,
+      "raw_pitch_deg": -43.6,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.09010133067442627
+    },
+    {
+      "host_s": 92.1433,
+      "field": "runner_mode",
+      "before": "jumping",
+      "after": "running",
+      "raw_roll_deg": -4.9,
+      "raw_pitch_deg": -73.6,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.013589962158223057
+    },
+    {
+      "host_s": 92.6713,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -19.6,
+      "raw_pitch_deg": -69.7,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.024305502923538724
+    },
+    {
+      "host_s": 94.6905,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 14.0,
+      "raw_pitch_deg": -32.8,
+      "mapped_pitch": 0.6836190476190477,
+      "estimated_vertical_g": 0.0883373421410879
+    },
+    {
+      "host_s": 94.8368,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": 0.1,
+      "raw_pitch_deg": -54.6,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.11437506169305378
+    },
+    {
+      "host_s": 95.0869,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -15.3,
+      "raw_pitch_deg": -73.5,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.09493841861399188
+    },
+    {
+      "host_s": 95.552,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": -13.2,
+      "raw_pitch_deg": -68.1,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.29378125401546196
+    },
+    {
+      "host_s": 96.3588,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": 1.6,
+      "raw_pitch_deg": -55.6,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.10716822640965806
+    },
+    {
+      "host_s": 96.7753,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 26.0,
+      "raw_pitch_deg": -82.1,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.06791756887909994
+    },
+    {
+      "host_s": 97.077,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": 11.2,
+      "raw_pitch_deg": -38.3,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.4799475809538362
+    },
+    {
+      "host_s": 100.1915,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -15.8,
+      "raw_pitch_deg": -7.8,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": -0.44889135223344245
+    },
+    {
+      "host_s": 102.7366,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 11.0,
+      "raw_pitch_deg": -2.8,
+      "mapped_pitch": -0.13542857142857145,
+      "estimated_vertical_g": -0.5390639331173975
+    },
+    {
+      "host_s": 112.132,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": -5.8,
+      "raw_pitch_deg": -46.9,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.5598674878044284
+    },
+    {
+      "host_s": 112.8378,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": -4.8,
+      "raw_pitch_deg": -55.4,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.8026760333986979
+    },
+    {
+      "host_s": 114.8925,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 2,
+      "raw_roll_deg": 11.3,
+      "raw_pitch_deg": -5.2,
+      "mapped_pitch": -0.006857142857142863,
+      "estimated_vertical_g": -0.8590496972432048
+    },
+    {
+      "host_s": 124.0314,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 2,
+      "raw_roll_deg": 10.6,
+      "raw_pitch_deg": -5.3,
+      "mapped_pitch": -0.030666666666666672,
+      "estimated_vertical_g": -0.803364898009628
+    },
+    {
+      "host_s": 128.4567,
+      "field": "runner_lane",
+      "before": 2,
+      "after": 1,
+      "raw_roll_deg": -16.8,
+      "raw_pitch_deg": -17.5,
+      "mapped_pitch": 0.16933333333333328,
+      "estimated_vertical_g": -0.854359457254746
+    },
+    {
+      "host_s": 129.7924,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -15.9,
+      "raw_pitch_deg": -32.3,
+      "mapped_pitch": 0.8074285714285716,
+      "estimated_vertical_g": -0.7527989135691
+    },
+    {
+      "host_s": 129.9065,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": -10.7,
+      "raw_pitch_deg": -25.9,
+      "mapped_pitch": 0.6502857142857142,
+      "estimated_vertical_g": -0.9477530751820489
+    },
+    {
+      "host_s": 130.5495,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 12.3,
+      "raw_pitch_deg": -12.6,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": -0.7934166528964111
+    },
+    {
+      "host_s": 130.6172,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": 14.1,
+      "raw_pitch_deg": -13.0,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": -0.8774009738649247
+    },
+    {
+      "host_s": 131.1367,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 2,
+      "raw_roll_deg": 12.0,
+      "raw_pitch_deg": -3.3,
+      "mapped_pitch": -0.06876190476190476,
+      "estimated_vertical_g": -0.9542281378449265
+    },
+    {
+      "host_s": 131.5183,
+      "field": "runner_lane",
+      "before": 2,
+      "after": 1,
+      "raw_roll_deg": -32.7,
+      "raw_pitch_deg": -14.2,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": -0.2806134766795685
+    },
+    {
+      "host_s": 132.094,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -45.5,
+      "raw_pitch_deg": -5.1,
+      "mapped_pitch": -0.03542857142857142,
+      "estimated_vertical_g": -1.540452706473305
+    },
+    {
+      "host_s": 136.4636,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 26.2,
+      "raw_pitch_deg": -3.5,
+      "mapped_pitch": -0.15447619047619046,
+      "estimated_vertical_g": 0.29056886838381957
+    },
+    {
+      "host_s": 137.0541,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 2,
+      "raw_roll_deg": 19.1,
+      "raw_pitch_deg": -2.3,
+      "mapped_pitch": -0.15923809523809526,
+      "estimated_vertical_g": -1.3680010081240195
+    },
+    {
+      "host_s": 138.6855,
+      "field": "runner_lane",
+      "before": 2,
+      "after": 1,
+      "raw_roll_deg": -15.6,
+      "raw_pitch_deg": -17.8,
+      "mapped_pitch": 0.17409523809523814,
+      "estimated_vertical_g": -1.3106594555292563
+    },
+    {
+      "host_s": 139.8929,
+      "field": "runner_lane",
+      "before": 1,
+      "after": 0,
+      "raw_roll_deg": -23.7,
+      "raw_pitch_deg": -21.8,
+      "mapped_pitch": 0.1598095238095238,
+      "estimated_vertical_g": -0.8180077045679088
+    },
+    {
+      "host_s": 140.092,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": -12.9,
+      "raw_pitch_deg": -47.5,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.9481918526510096
+    },
+    {
+      "host_s": 140.8157,
+      "field": "runner_mode",
+      "before": "sliding",
+      "after": "running",
+      "raw_roll_deg": 2.9,
+      "raw_pitch_deg": -15.9,
+      "mapped_pitch": 0.14552380952380947,
+      "estimated_vertical_g": -1.3875163257583534
+    },
+    {
+      "host_s": 141.9004,
+      "field": "runner_lane",
+      "before": 0,
+      "after": 1,
+      "raw_roll_deg": 24.8,
+      "raw_pitch_deg": -15.2,
+      "mapped_pitch": 0.0,
+      "estimated_vertical_g": -0.4894854516749847
+    },
+    {
+      "host_s": 142.1461,
+      "field": "runner_mode",
+      "before": "running",
+      "after": "sliding",
+      "raw_roll_deg": 9.1,
+      "raw_pitch_deg": -49.3,
+      "mapped_pitch": 1.0,
+      "estimated_vertical_g": -0.8819208974925581
+    }
+  ],
+  "human_intention_labels_available": false
+}

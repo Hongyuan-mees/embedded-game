@@ -19,14 +19,17 @@ Motion Rush supports STM32 lane changes, jumps, rear-tilt slides and keyboard fa
 In STM32 mode, F4 calibrates the neutral grip. Each left/right tilt moves one lane
 in that direction; returning to neutral keeps the lane and arms the next gesture.
 For example: center -> left tilt -> left lane -> neutral (still left lane) -> right
-tilt -> center lane. Holding that right tilt for 0.80 seconds takes another step
+tilt -> center lane. Holding that right tilt for 0.60 seconds takes another step
 into the right lane. Continued tilt repeats every 0.35 seconds; returning to neutral
 stops repeats and preserves the current lane. The outer lanes never wrap around.
 
 `set_motion_state()` accepts normalized Roll/Pitch in [-1, 1]. A lane command uses
 Roll +/-0.40; absolute Roll <=0.10 rearms it. With the default shared 4-degree dead
 zone and 25-degree full scale, these correspond to about 12.4 and 6.1 degrees from
-the calibrated grip. Rear tilt uses positive mapped Pitch >=0.60 (about 16.6 degrees)
+the calibrated grip. During lift detection, a recognised/buffered jump or airborne
+motion, the lane threshold rises to +/-0.55 (about 15.6 degrees) for both the first
+step and held repeats. Grounded motion returns to +/-0.40; deliberate stronger
+airborne tilt can still change lanes. Rear tilt uses positive mapped Pitch >=0.60 (about 16.6 degrees)
 held for 0.16 seconds to request one slide. An upward jump event during that brief
 confirmation cancels the pending slide and jumps first. Once the 0.60 trigger is
 crossed, holding Pitch >=0.45 keeps the request valid despite small angle wobble.
@@ -49,10 +52,12 @@ An upward jump command interrupts a grounded slide immediately and clears its
 remaining slide time. Midair double jumps remain disabled. The input buffer is
 for landing/action-lock timing, rather than waiting for an entire slide to end.
 After starting/resuming or changing input mode, return to neutral before a new tilt
-command. The shared jump detector now recovers gravity direction and gyro bias from
-0.30 seconds of stable raw IMU readings, independently of its estimated vertical
-acceleration, so a drifted estimate cannot prevent its own recovery. This recovery
-does not add a new stillness requirement for every jump. Firmware is unchanged.
+command. Shared v2 input now derives tilt and upward force from the same continuously
+corrected six-axis orientation. Gyro bias learning is separate and rejects slow
+intentional rotation. Saturated or severely inconsistent orientation temporarily
+zeros tilt and suppresses jumps while recovering automatically. The controller
+no longer depends on a strict stationary window for directional recovery.
+Firmware and sensor ranges are unchanged; v1 angle compatibility remains.
 
 F3 selects Keyboard mode. Keyboard lane, jump and slide commands remain available
 in either mode; neutral STM32 input no longer overrides keyboard lane changes.

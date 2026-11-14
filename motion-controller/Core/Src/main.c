@@ -59,6 +59,11 @@
 #define JUMP_LOW_THRESHOLD_G_F   0.82F
 #define JUMP_PULSE_MS            300U
 #define JUMP_COOLDOWN_MS         700U
+#define ENCODER_BUTTON_DEBOUNCE_MS 25U
+#define JOYSTICK_ADC_TIMEOUT_MS   10U
+#define JOYSTICK_SAMPLE_PERIOD_MS 20U
+#define JOYSTICK_BUTTON_DEBOUNCE_MS 25U
+#define KEY_DEBOUNCE_MS           25U
 
 /* USER CODE END PD */
 
@@ -71,10 +76,26 @@
 
 /* USER CODE BEGIN PV */
 
-static uint8_t usb_message[160];
+static uint8_t usb_message[256];
 static uint8_t mpu6050_address = MPU6050_DEFAULT_ADDRESS;
 static uint8_t i2c_external_pullup_mask = 0U;
 static uint8_t i2c_loopback_mask = 0U;
+static int32_t encoder_position = 0;
+static uint16_t encoder_previous_count = 0U;
+static uint8_t encoder_button_candidate = 0U;
+static uint8_t encoder_button_pressed = 0U;
+static uint32_t encoder_button_changed_tick = 0U;
+static uint16_t joystick_x = 0U;
+static uint16_t joystick_y = 0U;
+static bool joystick_adc_ready = false;
+static bool joystick_data_valid = false;
+static uint8_t joystick_button_candidate = 0U;
+static uint8_t joystick_button_pressed = 0U;
+static uint32_t joystick_button_changed_tick = 0U;
+static uint32_t joystick_last_sample_tick = 0U;
+static uint8_t key_candidate = 0U;
+static uint8_t key_pressed = 0U;
+static uint32_t key_changed_tick = 0U;
 #if USE_HARDWARE_I2C
 static uint8_t i2c_scan_count = 0U;
 static uint8_t i2c_first_address = 0U;
@@ -88,6 +109,13 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
 static void Soft_I2C_Init(void);
+static void Encoder_Init(void);
+static void Encoder_Update(uint32_t current_tick);
+static bool Joystick_Init(void);
+static bool Joystick_Read_Channel(uint8_t channel, uint16_t *value);
+static void Joystick_Update(uint32_t current_tick);
+static void Key_Init(void);
+static void Key_Update(uint32_t current_tick);
 #if USE_HARDWARE_I2C
 static void Hardware_I2C_Init(void);
 static void Hardware_I2C_Scan(void);
@@ -103,6 +131,198 @@ static void Motion_Update(int16_t ax, int16_t ay, int16_t az,
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+static void Key_Init(void)
+{
+  GPIO_InitTypeDef pin = {0};
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  pin.Pin = GPIO_PIN_13;
+  pin.Mode = GPIO_MODE_INPUT;
+  pin.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &pin);
+  key_candidate = (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13) == GPIO_PIN_RESET);
+  key_changed_tick = HAL_GetTick();
+}
+
+static void Key_Update(uint32_t current_tick)
+{
+  uint8_t pressed = (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13) == GPIO_PIN_RESET);
+  if (pressed != key_candidate)
+  {
+    key_candidate = pressed;
+    key_changed_tick = current_tick;
+  }
+  if ((current_tick - key_changed_tick) >= KEY_DEBOUNCE_MS)
+  {
+    key_pressed = key_candidate;
+  }
+}
+
+static bool Joystick_Init(void)
+{
+  GPIO_InitTypeDef pins = {0};
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_ADC_CONFIG(RCC_ADCPCLK2_DIV6); /* PCLK2=72 MHz, ADC=12 MHz. */
+  __HAL_RCC_ADC1_CLK_ENABLE();
+  __HAL_RCC_ADC1_FORCE_RESET();
+  __HAL_RCC_ADC1_RELEASE_RESET();
+
+  pins.Pin = GPIO_PIN_0 | GPIO_PIN_1;
+  pins.Mode = GPIO_MODE_ANALOG;
+  pins.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &pins);
+  pins.Pin = GPIO_PIN_2;
+  pins.Mode = GPIO_MODE_INPUT;
+  pins.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &pins);
+  joystick_button_candidate = (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2) == GPIO_PIN_RESET);
+  joystick_button_changed_tick = HAL_GetTick();
+
+  /* Single regular conversion, right-aligned, software trigger.  Long sample
+     times allow the joystick potentiometers to charge the ADC sample capacitor. */
+  ADC1->SMPR2 = (7U << ADC_SMPR2_SMP0_Pos) | (7U << ADC_SMPR2_SMP1_Pos);
+  ADC1->CR2 = ADC_CR2_EXTSEL | ADC_CR2_EXTTRIG | ADC_CR2_ADON;
+  HAL_Delay(1U);
+
+  ADC1->CR2 |= ADC_CR2_RSTCAL;
+  uint32_t started = HAL_GetTick();
+  while ((ADC1->CR2 & ADC_CR2_RSTCAL) != 0U)
+  {
+    if ((HAL_GetTick() - started) >= JOYSTICK_ADC_TIMEOUT_MS)
+    {
+      return false;
+    }
+  }
+  ADC1->CR2 |= ADC_CR2_CAL;
+  started = HAL_GetTick();
+  while ((ADC1->CR2 & ADC_CR2_CAL) != 0U)
+  {
+    if ((HAL_GetTick() - started) >= JOYSTICK_ADC_TIMEOUT_MS)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool Joystick_Read_Channel(uint8_t channel, uint16_t *value)
+{
+  ADC1->SQR3 = channel;
+  ADC1->SR = 0U;
+  ADC1->CR2 |= ADC_CR2_SWSTART;
+  uint32_t started = HAL_GetTick();
+  while ((ADC1->SR & ADC_SR_EOC) == 0U)
+  {
+    if ((HAL_GetTick() - started) >= JOYSTICK_ADC_TIMEOUT_MS)
+    {
+      /* Stop a stalled conversion before attempting a later sample. */
+      ADC1->CR2 &= ~ADC_CR2_ADON;
+      ADC1->CR2 |= ADC_CR2_ADON;
+      HAL_Delay(1U);
+      return false;
+    }
+  }
+  *value = (uint16_t)(ADC1->DR & 0x0FFFU);
+  return true;
+}
+
+static void Joystick_Update(uint32_t current_tick)
+{
+  uint8_t pressed = (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2) == GPIO_PIN_RESET);
+  if (pressed != joystick_button_candidate)
+  {
+    joystick_button_candidate = pressed;
+    joystick_button_changed_tick = current_tick;
+  }
+  if ((current_tick - joystick_button_changed_tick) >= JOYSTICK_BUTTON_DEBOUNCE_MS)
+  {
+    joystick_button_pressed = joystick_button_candidate;
+  }
+
+  if ((current_tick - joystick_last_sample_tick) >= JOYSTICK_SAMPLE_PERIOD_MS)
+  {
+    joystick_last_sample_tick = current_tick;
+    uint16_t x = 0U;
+    uint16_t y = 0U;
+    joystick_data_valid = joystick_adc_ready &&
+                          Joystick_Read_Channel(0U, &x) &&
+                          Joystick_Read_Channel(1U, &y);
+    if (joystick_data_valid)
+    {
+      joystick_x = x;
+      joystick_y = y;
+    }
+  }
+}
+
+static void Encoder_Init(void)
+{
+  GPIO_InitTypeDef pins = {0};
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_TIM4_CLK_ENABLE();
+  __HAL_RCC_TIM4_FORCE_RESET();
+  __HAL_RCC_TIM4_RELEASE_RESET();
+  __HAL_AFIO_REMAP_TIM4_DISABLE();
+
+  /* CLK=PB6/TIM4_CH1, DT=PB7/TIM4_CH2, SW=PB12, active low. */
+  pins.Pin = GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_12;
+  pins.Mode = GPIO_MODE_INPUT;
+  pins.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &pins);
+
+  /* Encoder mode 3 counts both quadrature inputs.  Use the CMSIS register
+     definitions because this project does not include the HAL TIM driver. */
+  TIM4->PSC = 0U;
+  TIM4->ARR = 0xFFFFU;
+  TIM4->CCMR1 = TIM_CCMR1_CC1S_0 | TIM_CCMR1_CC2S_0 |
+                 (15U << TIM_CCMR1_IC1F_Pos) | (15U << TIM_CCMR1_IC2F_Pos);
+  TIM4->CCER = TIM_CCER_CC1E | TIM_CCER_CC2E;
+  TIM4->SMCR = TIM_SMCR_SMS_0 | TIM_SMCR_SMS_1;
+  TIM4->EGR = TIM_EGR_UG;
+  TIM4->SR = 0U;
+  TIM4->CNT = 0U;
+  TIM4->CR1 = TIM_CR1_CEN;
+  encoder_previous_count = 0U;
+  encoder_position = 0;
+  encoder_button_pressed = 0U;
+  encoder_button_candidate = (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET);
+  encoder_button_changed_tick = HAL_GetTick();
+}
+
+static void Encoder_Update(uint32_t current_tick)
+{
+  uint16_t count = (uint16_t)TIM4->CNT;
+  uint16_t difference = (uint16_t)(count - encoder_previous_count);
+  encoder_previous_count = count;
+  int32_t delta = difference;
+  if (delta > 32767)
+  {
+    delta -= 65536;
+  }
+
+  /* Extend the wrapping 16-bit hardware count without signed overflow. */
+  int64_t position = (int64_t)encoder_position + delta;
+  if (position > INT32_MAX)
+  {
+    position = INT32_MAX;
+  }
+  else if (position < INT32_MIN)
+  {
+    position = INT32_MIN;
+  }
+  encoder_position = (int32_t)position;
+
+  uint8_t pressed = (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET);
+  if (pressed != encoder_button_candidate)
+  {
+    encoder_button_candidate = pressed;
+    encoder_button_changed_tick = current_tick;
+  }
+  if ((current_tick - encoder_button_changed_tick) >= ENCODER_BUTTON_DEBOUNCE_MS)
+  {
+    encoder_button_pressed = encoder_button_candidate;
+  }
+}
 
 #if 1
 static void Soft_I2C_Delay(void)
@@ -633,6 +853,9 @@ int main(void)
   HAL_Delay(500U);
 #endif
     mpu6050_ready = MPU6050_Init(&who_am_i);
+    Encoder_Init();
+    joystick_adc_ready = Joystick_Init();
+    Key_Init();
   }
   /* USER CODE END 2 */
 
@@ -661,6 +884,9 @@ int main(void)
       continue;
     }
 
+    Encoder_Update(current_tick);
+    Joystick_Update(current_tick);
+    Key_Update(current_tick);
     uint32_t message_period = mpu6050_ready ? 20U : 1000U;
 
     if ((current_tick - last_usb_message_tick) >= message_period)
@@ -758,7 +984,26 @@ int main(void)
         }
       }
 
-      if ((message_length > 0) &&
+      /* Append control inputs to data and diagnostic lines, preserving CRLF. */
+      if ((message_length >= 2) && (message_length < (int)sizeof(usb_message)))
+      {
+        int suffix_length = snprintf((char *)usb_message + message_length - 2,
+                                     sizeof(usb_message) - (size_t)message_length + 2U,
+                                     ",ENC:%ld,ENC_SW:%u,JOY_X:%u,JOY_Y:%u,JOY_SW:%u,JOY_OK:%u,KEY:%u\r\n",
+                                     (long)encoder_position, encoder_button_pressed,
+                                     joystick_x, joystick_y, joystick_button_pressed,
+                                     (unsigned int)joystick_data_valid, key_pressed);
+        if (suffix_length > 0)
+        {
+          message_length = message_length - 2 + suffix_length;
+        }
+        else
+        {
+          message_length = 0;
+        }
+      }
+
+      if ((message_length > 0) && (message_length < (int)sizeof(usb_message)) &&
           (CDC_Transmit_FS(usb_message, (uint16_t)message_length) == USBD_OK))
       {
         last_usb_message_tick = current_tick;

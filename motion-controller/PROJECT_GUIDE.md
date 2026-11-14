@@ -1,8 +1,8 @@
 # STM32 体感控制器：项目结构与使用指南
 
-本文面向第一次接触本工程的组员。项目功能是使用 STM32F103C8T6 读取
-MPU6050 兼容六轴传感器，计算 Roll/Pitch 和跳跃事件，再通过 USB CDC
-虚拟串口发送给电脑端游戏。
+本文面向第一次接触本工程的组员。STM32F103C8T6 读取六轴传感器、XY 摇杆、
+旋转编码器和独立按键，通过 USB CDC 虚拟串口将各输入发送给电脑端游戏。
+本指南对应 2026-11-14 完成模块验收的固件。
 
 ## 1. 项目当前状态
 
@@ -13,10 +13,14 @@ MPU6050 兼容六轴传感器，计算 Roll/Pitch 和跳跃事件，再通过 US
 - MPU6050 兼容模块能通过 I2C 正常读取；
 - 平放和倾斜时 Roll/Pitch 变化正确；
 - 跳跃动作能够输出 `JUMP:1`，静止时无误触发；
+- 编码器双向旋转与按压读取通过；
+- 摇杆四向、回中和按压读取通过；
+- 独立按键松开、按住、再次松开读取通过；
 - 数据更新频率为 50 Hz。
 
-当前模块使用 I2C 地址 `0x68`，其 `WHO_AM_I` 返回 `0x74`。虽然不是标准
-MPU6050 的 `0x68`，但所需寄存器和六轴数据已经实测兼容。
+当前模块使用 I2C 地址 `0x68`，其 `WHO_AM_I` 返回 `0x74`。固件接受身份值
+`0x68` 或 `0x74`。目前已验证本项目使用的功能，具体芯片型号尚未确认。
+更换模块后需要重新核对配置和数据比例。
 
 ## 2. 目录结构
 
@@ -25,7 +29,7 @@ motion_controller/
 ├─ Core/
 │  ├─ Inc/                         STM32 应用层头文件
 │  ├─ Src/
-│  │  ├─ main.c                    传感器读取、姿态计算、跳跃检测、USB 输出
+│  │  ├─ main.c                    姿态、摇杆 ADC、编码器、按键、USB 输出
 │  │  ├─ stm32f1xx_hal_msp.c       I2C1 的 PB8/PB9 重映射配置
 │  │  ├─ usbd_cdc_interface.c      USB CDC 接口
 │  │  └─ ...                       时钟、GPIO、中断等代码
@@ -33,9 +37,9 @@ motion_controller/
 ├─ Drivers/                        CMSIS 和 STM32F1 HAL 驱动
 ├─ Middlewares/
 │  └─ ST/STM32_USB_Device_Library/ USB Device 与 CDC 中间件
+├─ releases/                       GitHub 中的独立工程包和已验证 ELF
 ├─ Debug/                          CubeIDE 编译结果（可重新生成）
 │  └─ motion_controller.elf        可直接烧录的已验证固件
-├─ docs/                           早期调试图片和示意图
 ├─ motion_controller.ioc           STM32CubeMX 工程配置
 ├─ STM32F103C8TX_FLASH.ld          Flash 链接脚本
 ├─ .project / .cproject            STM32CubeIDE 工程文件
@@ -43,21 +47,14 @@ motion_controller/
 └─ PROJECT_GUIDE.md                本使用指南
 ```
 
-> 注意：`docs/mpu6050_breadboard_wiring.*` 是早期示意图，与最终实物插孔
-> 不完全一致。接线必须以本文和 `README.md` 的表格为准。
+本地曾保留早期接线示意图。新版孔位以 README 的接线表为准。
 
 ## 3. 最终硬件接线
 
-I2C1 使用重映射引脚 `PB8=SCL`、`PB9=SDA`。面包板两侧红蓝电源轨未使用，
-所有线均直接连接。
-
-| MPU6050 引脚 | STM32 引脚 | 实际面包板跳线 |
-|---|---|---|
-| VCC（A32） | 5V（G22） | E32 -> J22 |
-| GND（A33） | GND（G23） | E33 -> J23 |
-| SCL（A34） | PB8（G20） | E34 -> J20 |
-| SDA（A35） | PB9（G21） | E35 -> J21 |
-| AD0（A38） | GND（G23） | E38 -> I23 |
+2026-11-14 核心板移动后，VBT 位于 H40，另一排的 3.3V 位于 D40。
+最新孔位表集中记录在 [README 的当前实物接线部分](README.md#当前实物接线)。
+I2C1 的 SCL 接 PB8、SDA 接 PB9。MPU VCC 接核心板 5V，MPU GND、AD0
+接公共地，STM32 GND 也接该公共地。
 
 - `XDA`、`XCL`、`INT` 不连接；
 - AD0 接地，因此设备地址为 `0x68`；
@@ -141,7 +138,7 @@ motion-controller/releases/motion_controller.elf
 核心板通过 USB CDC 每 20 ms 发送一行，即约 50 Hz。数据示例：
 
 ```text
-ROLL:-12.3,PITCH:4.5,JUMP:0
+ROLL:-12.3,PITCH:4.5,JUMP:0,ENC:0,ENC_SW:0,JOY_X:2060,JOY_Y:2024,JOY_SW:0,JOY_OK:1,KEY:0
 ```
 
 字段定义：
@@ -151,11 +148,21 @@ ROLL:-12.3,PITCH:4.5,JUMP:0
 | `ROLL` | 横滚角 | 度，带一位小数 |
 | `PITCH` | 俯仰角 | 度，带一位小数 |
 | `JUMP` | 跳跃状态 | `0` 或 `1` |
+| `ENC` | 编码器累计边沿计数 | 有符号整数，上电从 0 开始 |
+| `ENC_SW` | 编码器按压状态 | 按下 `1`，松开 `0` |
+| `JOY_X` | PA0 的 ADC 原始值 | 0～4095 |
+| `JOY_Y` | PA1 的 ADC 原始值 | 0～4095 |
+| `JOY_SW` | 摇杆按压状态 | 按下 `1`，松开 `0` |
+| `JOY_OK` | 两路 ADC 本轮转换成功 | `1` 有效，`0` 时忽略 X/Y |
+| `KEY` | 独立按键状态 | 按下 `1`，松开 `0` |
 
 - 行尾是 `\r\n`；
 - 串口工具可以设置为 115200、8N1；USB CDC 实际传输不依赖 UART 波特率；
 - 启动或重连时可能先收到状态行，游戏端应忽略不含三个控制字段的行；
 - COM 号不是固定的，不要在游戏程序里写死 `COM7`。
+
+MPU 出错时发送错误状态行并降低输出频率，状态行末尾也可能带有其他输入字段。
+`JOY_OK=1` 表示 ADC 转换成功，接收端还需结合接线和方向验收判断输入。
 
 ## 8. 游戏端如何解析
 
@@ -164,9 +171,17 @@ ROLL:-12.3,PITCH:4.5,JUMP:0
 1. 让用户从可用串口列表中选择设备；
 2. 按行读取串口；
 3. 只处理同时包含 `ROLL:`、`PITCH:`、`JUMP:` 的行；
-4. 以逗号分成三个字段，再以冒号分出名称和值；
+4. 按逗号分割，再按冒号将字段存入键值表，按字段名称读取并允许新增字段；
 5. 将 Roll/Pitch 映射为角色或小球的移动方向；
 6. 将 `JUMP` 的 `0 -> 1` 上升沿作为一次跳跃。
+
+摇杆当前安装方向下，左推增大 `JOY_Y`，右推减小 `JOY_Y`，前推减小 `JOY_X`，
+后推增大 `JOY_X`。首次中心测量约为 X=2060、Y=2024，游戏端需要根据实际回中
+值校准和设置死区。完整实测表位于 README。
+
+编码器使用相邻包 `ENC` 的差值，转动方向和每个卡点的计数需要按实物映射。
+串口重连或设备复位后应重新建立计数基准。三个按压字段 `ENC_SW`、`JOY_SW`、
+`KEY` 在按住时持续为 1，单次动作应检测上升沿。
 
 跳跃状态会保持约 300 ms，因此一跳会收到多行 `JUMP:1`。游戏端不要对每一行
 都重复执行跳跃，应只响应上升沿，或在触发后设置一次性锁定，等 `JUMP` 回到 0
@@ -181,7 +196,10 @@ for each serialLine:
     if line does not contain ROLL, PITCH and JUMP:
         continue
 
-    roll, pitch, jump = parse(line)
+    fields = parseAllFieldsByName(line)
+    roll = fields["ROLL"]
+    pitch = fields["PITCH"]
+    jump = fields["JUMP"]
     horizontalInput = applyDeadZone(roll, 3 to 5 degrees)
     verticalInput   = applyDeadZone(pitch, 3 to 5 degrees)
 
@@ -202,6 +220,9 @@ for each serialLine:
 4. 抬起面包板一侧，Roll 或 Pitch 应随倾角稳定变化；
 5. 双手拿稳控制器并快速向上抬动后停住，应短暂出现 `JUMP:1`；
 6. 放回桌面静止时，`JUMP` 应保持为 0。
+7. 转动编码器，检查 `ENC` 双向变化，按压时 `ENC_SW=1`，松开恢复 0。
+8. 依次推动摇杆四向，检查对应 ADC 端点，松开后回中，按压时 `JOY_SW=1`。
+9. 独立按键按住时 `KEY=1`，松开后恢复 0。
 
 ## 10. 常见问题
 
@@ -251,5 +272,4 @@ for each serialLine:
 - 可选：已验证的 `motion_controller.elf`。
 
 不要提交 `tmp/`、浏览器缓存或大量可重新生成的 Debug 中间文件。
-
 
